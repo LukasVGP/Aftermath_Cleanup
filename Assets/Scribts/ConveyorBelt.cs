@@ -6,7 +6,6 @@ public class ConveyorBelt : MonoBehaviour
     [SerializeField] private Transform endPoint;
     [SerializeField] private float beltSpeed = 2f;
     [SerializeField] private Vector2 moveDirection = Vector2.right;
-
     private bool isActive = false;
     private Animator animator;
 
@@ -44,13 +43,26 @@ public class ConveyorBelt : MonoBehaviour
 
                 if (Vector2.Distance(item.transform.position, endPoint.position) < 0.1f)
                 {
+                    if (isZombieBody)
+                    {
+                        Destroy(item.gameObject);
+                    }
                     if (isGoldCoin)
                     {
-                        GameManager.Instance?.AddScore(goldCoin.GetValue());
+                        EnableCoinPhysics(goldCoin);
                     }
-                    Destroy(item.gameObject);
                 }
             }
+        }
+    }
+
+    private void EnableCoinPhysics(GoldCoin coin)
+    {
+        Rigidbody2D rb = coin.gameObject.GetComponent<Rigidbody2D>();
+        if (rb != null)
+        {
+            rb.bodyType = RigidbodyType2D.Dynamic;
+            rb.gravityScale = 1;
         }
     }
 
