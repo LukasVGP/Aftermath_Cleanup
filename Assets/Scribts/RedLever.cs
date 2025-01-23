@@ -1,8 +1,8 @@
 using UnityEngine;
 
-public class BlueLever : MonoBehaviour
+public class RedLever : MonoBehaviour
 {
-    [SerializeField] private ConveyorBelt conveyorBelt;
+    [SerializeField] private FurnaceLid furnaceLid;
     [SerializeField] private float leverRotation = 45f;
     private bool isActivated = false;
     private Animator animator;
@@ -17,7 +17,7 @@ public class BlueLever : MonoBehaviour
         isActivated = true;
         animator.SetBool("IsActivated", true);
         transform.rotation = Quaternion.Euler(0, 0, leverRotation);
-        conveyorBelt.ActivateBlueLever();
+        furnaceLid.ActivateRedLever();
     }
 
     public void DeactivateLever()
@@ -25,6 +25,11 @@ public class BlueLever : MonoBehaviour
         isActivated = false;
         animator.SetBool("IsActivated", false);
         transform.rotation = Quaternion.Euler(0, 0, 0);
-        conveyorBelt.DeactivateBelt();
+        furnaceLid.DeactivateLid();
+    }
+
+    public bool IsActivated()
+    {
+        return isActivated;
     }
 }

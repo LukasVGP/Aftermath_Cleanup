@@ -11,12 +11,14 @@ public class RedPlayerController : MonoBehaviour
     private ZombieBody carriedBody;
     private BluePlayerController otherPlayer;
 
+    // Update the Start() method
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
         animator = GetComponent<Animator>();
-        otherPlayer = FindObjectOfType<BluePlayerController>();
+        otherPlayer = Object.FindFirstObjectByType<BluePlayerController>();
     }
+
 
     void Update()
     {
@@ -31,6 +33,17 @@ public class RedPlayerController : MonoBehaviour
 
         Vector2 movement = new Vector2(horizontal, vertical).normalized * moveSpeed;
         rb.linearVelocity = movement;
+
+        if (Input.GetKeyDown(KeyCode.E))
+        {
+            TryInteractWithLever();
+        }
+
+        // Existing lifting code
+        if (Input.GetKeyDown(KeyCode.Q))
+        {
+            TryLiftZombieBody();
+        }
 
         // Actions
         if (Input.GetKeyDown(KeyCode.E)) // Use action

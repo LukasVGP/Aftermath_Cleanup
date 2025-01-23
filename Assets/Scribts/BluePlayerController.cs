@@ -10,26 +10,17 @@ public class BluePlayerController : MonoBehaviour
     private bool isCarrying = false;
     private ZombieBody carriedBody;
     private RedPlayerController otherPlayer;
-    private SpriteRenderer spriteRenderer;
-    private bool isFacingRight = true;
 
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
         animator = GetComponent<Animator>();
-        otherPlayer = FindObjectOfType<RedPlayerController>();
-        spriteRenderer = GetComponent<SpriteRenderer>();
+        otherPlayer = Object.FindFirstObjectByType<RedPlayerController>();
     }
 
     void Update()
     {
-        HandleMovement();
-        HandleActions();
-        UpdateAnimations();
-    }
-
-    private void HandleMovement()
-    {
+        // Movement
         float horizontal = 0f;
         float vertical = 0f;
 
@@ -41,39 +32,27 @@ public class BluePlayerController : MonoBehaviour
         Vector2 movement = new Vector2(horizontal, vertical).normalized * moveSpeed;
         rb.linearVelocity = movement;
 
-        // Flip sprite based on movement direction
-        if (horizontal != 0)
+        // Actions
+        if (Input.GetKeyDown(KeyCode.Keypad9))
         {
-            if (horizontal > 0 && !isFacingRight)
-                FlipSprite();
-            else if (horizontal < 0 && isFacingRight)
-                FlipSprite();
-        }
-    }
-
-    private void HandleActions()
-    {
-        if (Input.GetKeyDown(KeyCode.Keypad9)) // Use action
-        {
-            TryInteractWithConveyor();
+            TryInteractWithLever();
         }
 
-        if (Input.GetKeyDown(KeyCode.Keypad7)) // Lift action
+        if (Input.GetKeyDown(KeyCode.Keypad7))
         {
             TryLiftZombieBody();
         }
     }
 
-    private void TryInteractWithConveyor()
+    private void TryInteractWithLever()
     {
         Collider2D[] colliders = Physics2D.OverlapCircleAll(transform.position, interactRange);
         foreach (Collider2D collider in colliders)
         {
-            ConveyorBelt belt = collider.GetComponent<ConveyorBelt>();
-            if (belt != null)
+            BlueLever lever = collider.GetComponent<BlueLever>();
+            if (lever != null)
             {
-                belt.ActivateBlueLever();
-                animator.SetTrigger("UseAction");
+                lever.ActivateLever();
                 break;
             }
         }
@@ -104,7 +83,6 @@ public class BluePlayerController : MonoBehaviour
         isCarrying = true;
         carriedBody = body;
         body.OnPickedUp(this);
-        animator.SetBool("IsCarrying", true);
     }
 
     private void DropBody()
@@ -114,36 +92,9 @@ public class BluePlayerController : MonoBehaviour
             carriedBody.OnDropped();
             isCarrying = false;
             carriedBody = null;
-            animator.SetBool("IsCarrying", false);
         }
-    }
-
-    private void FlipSprite()
-    {
-        isFacingRight = !isFacingRight;
-        spriteRenderer.flipX = !isFacingRight;
-    }
-
-    private void UpdateAnimations()
-    {
-        animator.SetFloat("Speed", rb.linearVelocity.magnitude);
-        animator.SetBool("IsCarrying", isCarrying);
     }
 
     public bool IsCarrying() => isCarrying;
     public Vector3 GetPosition() => transform.position;
-
-    private void OnDrawGizmosSelected()
-    {
-        // Visualize interaction range in editor
-        Gizmos.color = Color.blue;
-        Gizmos.DrawWireSphere(transform.position, interactRange);
-    }
-
-    public ZombieBody GetCarriedBody() => carriedBody;
-
-    public void ForceDropBody()
-    {
-        DropBody();
-    }
 }

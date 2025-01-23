@@ -2,15 +2,34 @@ using UnityEngine;
 
 public class BlueLever : MonoBehaviour
 {
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
+    [SerializeField] private ConveyorBelt conveyorBelt;
+    [SerializeField] private float leverRotation = 45f;
+    private bool isActivated = false;
+    private Animator animator;
+
     void Start()
     {
-        
+        animator = GetComponent<Animator>();
     }
 
-    // Update is called once per frame
-    void Update()
+    public void ActivateLever()
     {
-        
+        isActivated = true;
+        animator.SetBool("IsActivated", true);
+        transform.rotation = Quaternion.Euler(0, 0, leverRotation);
+        conveyorBelt.ActivateBlueLever();
+    }
+
+    public void DeactivateLever()
+    {
+        isActivated = false;
+        animator.SetBool("IsActivated", false);
+        transform.rotation = Quaternion.Euler(0, 0, 0);
+        conveyorBelt.DeactivateBelt();
+    }
+
+    public bool IsActivated()
+    {
+        return isActivated;
     }
 }

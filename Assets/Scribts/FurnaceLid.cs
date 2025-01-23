@@ -2,15 +2,28 @@ using UnityEngine;
 
 public class FurnaceLid : MonoBehaviour
 {
-    [SerializeField] private float openAngle = 90f;
-    [SerializeField] private float openSpeed = 2f;
-
+    [SerializeField] private float lidRotationSpeed = 2f;
+    private float currentRotation = 0f;
     private bool isOpen = false;
     private Animator animator;
 
     void Start()
     {
         animator = GetComponent<Animator>();
+    }
+
+    void Update()
+    {
+        if (isOpen && currentRotation < 90f)
+        {
+            currentRotation += lidRotationSpeed * Time.deltaTime;
+            transform.rotation = Quaternion.Euler(0, 0, currentRotation);
+        }
+        else if (!isOpen && currentRotation > 0f)
+        {
+            currentRotation -= lidRotationSpeed * Time.deltaTime;
+            transform.rotation = Quaternion.Euler(0, 0, currentRotation);
+        }
     }
 
     public void ActivateRedLever()

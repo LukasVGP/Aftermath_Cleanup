@@ -11,11 +11,13 @@ public class ZombieBody : MonoBehaviour
     private bool isTorn = false;
     private bool isBeingCarried = false;
 
+    // Update the Start() method
     private void Start()
     {
-        redPlayer = FindObjectOfType<RedPlayerController>();
-        bluePlayer = FindObjectOfType<BluePlayerController>();
+        redPlayer = Object.FindFirstObjectByType<RedPlayerController>();
+        bluePlayer = Object.FindFirstObjectByType<BluePlayerController>();
     }
+
 
     private void Update()
     {
