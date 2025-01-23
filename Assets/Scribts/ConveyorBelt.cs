@@ -30,15 +30,14 @@ public class ConveyorBelt : MonoBehaviour
 
     private void MoveItems()
     {
-        float endX = endPoint.position.x;
-        float endY = endPoint.position.y + 1f;
-        Collider2D[] items = Physics2D.OverlapAreaAll(spawnPoint.position, new Vector2(endX, endY));
+        Collider2D[] items = Physics2D.OverlapAreaAll(spawnPoint.position, new Vector2(endPoint.position.x, endPoint.position.y));
 
         foreach (Collider2D item in items)
         {
             if (item.TryGetComponent(out ZombieBody body) && !body.IsBeingCarried())
             {
-                item.transform.Translate(moveDirection.normalized * beltSpeed * Time.deltaTime);
+                Vector3 newPosition = item.transform.position + (Vector3)(moveDirection.normalized * beltSpeed * Time.deltaTime);
+                item.transform.position = newPosition;
 
                 if (Vector2.Distance(item.transform.position, endPoint.position) < 0.1f)
                 {

@@ -8,7 +8,6 @@ public class ZombieBody : MonoBehaviour
     [SerializeField] private float grabRadius = 0.5f;
     [SerializeField] private float carryHeight = 1.5f;
     [SerializeField] private Transform spawnPoint;
-    [SerializeField] private float spawnHeightOffset = -0.5f;
 
     private MonoBehaviour headCarrier;
     private MonoBehaviour feetCarrier;
@@ -38,7 +37,6 @@ public class ZombieBody : MonoBehaviour
             {
                 conveyorBelt = belt;
                 Vector3 spawnPosition = conveyorBelt.GetSpawnPoint().position;
-                spawnPosition.y += spawnHeightOffset;
                 transform.SetPositionAndRotation(spawnPosition, defaultRotation);
                 rb.linearVelocity = Vector2.zero;
                 rb.bodyType = RigidbodyType2D.Kinematic;
