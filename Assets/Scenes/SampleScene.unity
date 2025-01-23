@@ -611,6 +611,7 @@ GameObject:
   - component: {fileID: 773646310}
   - component: {fileID: 773646309}
   - component: {fileID: 773646308}
+  - component: {fileID: 773646312}
   m_Layer: 0
   m_Name: Worker_1_red_0
   m_TagString: Untagged
@@ -761,6 +762,20 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &773646312
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 773646306}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 090a70134a688354f91ff9a83ba08d76, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  moveSpeed: 5
+  jumpForce: 10
 --- !u!1 &841557470
 GameObject:
   m_ObjectHideFlags: 0
@@ -1239,6 +1254,7 @@ GameObject:
   - component: {fileID: 1580056839}
   - component: {fileID: 1580056838}
   - component: {fileID: 1580056837}
+  - component: {fileID: 1580056841}
   m_Layer: 0
   m_Name: Worker_2_blue_0
   m_TagString: Untagged
@@ -1389,6 +1405,20 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1580056841
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1580056835}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aa2b046ddd1bd914d9ccb53285a4d9e1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  moveSpeed: 5
+  jumpForce: 10
 --- !u!1 &1687816949
 GameObject:
   m_ObjectHideFlags: 0

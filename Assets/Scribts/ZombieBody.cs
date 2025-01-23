@@ -6,20 +6,26 @@ public class ZombieBody : MonoBehaviour
     public Transform headPosition;
     public Transform feetPosition;
 
-    private PlayerController headPlayer;
-    private PlayerController feetPlayer;
+    private MonoBehaviour headPlayer;
+    private MonoBehaviour feetPlayer;
     private bool isBeingCarried = false;
 
     private void OnTriggerStay2D(Collider2D other)
     {
-        PlayerController player = other.GetComponent<PlayerController>();
-        if (player != null && player.WantsToGrab)
+        var redPlayer = other.GetComponent<RedPlayerController>();
+        var bluePlayer = other.GetComponent<BluePlayerController>();
+
+        if (redPlayer != null && redPlayer.WantsToGrab)
         {
-            TryGrab(player);
+            TryGrab(redPlayer);
+        }
+        else if (bluePlayer != null && bluePlayer.WantsToGrab)
+        {
+            TryGrab(bluePlayer);
         }
     }
 
-    private void TryGrab(PlayerController player)
+    private void TryGrab(MonoBehaviour player)
     {
         float distanceToHead = Vector2.Distance(player.transform.position, headPosition.position);
         float distanceToFeet = Vector2.Distance(player.transform.position, feetPosition.position);
@@ -27,18 +33,20 @@ public class ZombieBody : MonoBehaviour
         if (distanceToHead < 1f && headPlayer == null)
         {
             headPlayer = player;
-            player.GrabBody(this);
+            if (player is RedPlayerController redPlayer) redPlayer.GrabBody(this);
+            if (player is BluePlayerController bluePlayer) bluePlayer.GrabBody(this);
         }
         else if (distanceToFeet < 1f && feetPlayer == null)
         {
             feetPlayer = player;
-            player.GrabBody(this);
+            if (player is RedPlayerController redPlayer) redPlayer.GrabBody(this);
+            if (player is BluePlayerController bluePlayer) bluePlayer.GrabBody(this);
         }
 
         isBeingCarried = (headPlayer != null && feetPlayer != null);
     }
 
-    public void Release(PlayerController player)
+    public void Release(MonoBehaviour player)
     {
         if (player == headPlayer) headPlayer = null;
         if (player == feetPlayer) feetPlayer = null;
