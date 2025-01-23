@@ -2,48 +2,46 @@ using UnityEngine;
 
 public class FurnaceLid : MonoBehaviour
 {
-    [SerializeField] private float lidRotationSpeed = 2f;
+    [SerializeField] private float lidRotationSpeed = 90f;
+    [SerializeField] private Transform pivotPoint;
+    [SerializeField] private float maxRotation = 90f;
+
     private float currentRotation = 0f;
     private bool isOpen = false;
-    private Animator animator;
-
-    void Start()
-    {
-        animator = GetComponent<Animator>();
-    }
 
     void Update()
     {
-        if (isOpen && currentRotation < 90f)
+        if (isOpen && currentRotation < maxRotation)
         {
-            currentRotation += lidRotationSpeed * Time.deltaTime;
-            transform.rotation = Quaternion.Euler(0, 0, currentRotation);
+            float rotationThisFrame = lidRotationSpeed * Time.deltaTime;
+            currentRotation = Mathf.Min(currentRotation + rotationThisFrame, maxRotation);
+            transform.RotateAround(pivotPoint.position, Vector3.back, rotationThisFrame);
         }
-        else if (!isOpen && currentRotation > 0f)
+        else if (!isOpen && currentRotation > 0)
         {
-            currentRotation -= lidRotationSpeed * Time.deltaTime;
-            transform.rotation = Quaternion.Euler(0, 0, currentRotation);
+            float rotationThisFrame = lidRotationSpeed * Time.deltaTime;
+            currentRotation = Mathf.Max(currentRotation - rotationThisFrame, 0);
+            transform.RotateAround(pivotPoint.position, Vector3.forward, rotationThisFrame);
         }
     }
 
     public void ActivateRedLever()
     {
         isOpen = true;
-        animator.SetBool("IsOpen", true);
     }
 
     public void DeactivateLid()
     {
         isOpen = false;
-        animator.SetBool("IsOpen", false);
     }
 
-    private void OnTriggerEnter2D(Collider2D other)
+    private void OnDrawGizmos()
     {
-        if (isOpen && other.TryGetComponent<ZombieBody>(out ZombieBody body))
+        if (pivotPoint != null)
         {
-            GameManager.Instance.AddScore(100);
-            Destroy(body.gameObject);
+            Gizmos.color = Color.yellow;
+            Gizmos.DrawWireSphere(pivotPoint.position, 0.1f);
+            Gizmos.DrawLine(pivotPoint.position, transform.position);
         }
     }
 }

@@ -34,15 +34,21 @@ public class ConveyorBelt : MonoBehaviour
 
         foreach (Collider2D item in items)
         {
-            if (item.TryGetComponent(out ZombieBody body) && !body.IsBeingCarried())
+            bool isZombieBody = item.TryGetComponent(out ZombieBody zombieBody);
+            bool isGoldCoin = item.TryGetComponent(out GoldCoin goldCoin);
+
+            if ((isZombieBody && !zombieBody.IsBeingCarried()) || isGoldCoin)
             {
                 Vector3 newPosition = item.transform.position + (Vector3)(moveDirection.normalized * beltSpeed * Time.deltaTime);
                 item.transform.position = newPosition;
 
                 if (Vector2.Distance(item.transform.position, endPoint.position) < 0.1f)
                 {
+                    if (isGoldCoin)
+                    {
+                        GameManager.Instance?.AddScore(goldCoin.GetValue());
+                    }
                     Destroy(item.gameObject);
-                    if (GameManager.Instance) GameManager.Instance.AddScore(100);
                 }
             }
         }
