@@ -12,18 +12,29 @@ public class BlueLever : MonoBehaviour
         conveyorBelt = FindFirstObjectByType<ConveyorBelt>();
     }
 
+    private void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.Keypad9))
+        {
+            ActivateLever();
+        }
+        else if (Input.GetKeyUp(KeyCode.Keypad9))
+        {
+            DeactivateLever();
+        }
+    }
+
     public void ActivateLever()
     {
-        // Use the leverRotation field
         transform.rotation = Quaternion.Euler(0, 0, leverRotation);
-        animator?.SetBool("IsActivated", true);
-        conveyorBelt?.Activate();
+        if (animator) animator.SetBool("IsActivated", true);
+        if (conveyorBelt) conveyorBelt.Activate();
     }
 
     public void DeactivateLever()
     {
         transform.rotation = Quaternion.Euler(0, 0, 0);
-        animator?.SetBool("IsActivated", false);
-        conveyorBelt?.Deactivate();
+        if (animator) animator.SetBool("IsActivated", false);
+        if (conveyorBelt) conveyorBelt.Deactivate();
     }
 }
