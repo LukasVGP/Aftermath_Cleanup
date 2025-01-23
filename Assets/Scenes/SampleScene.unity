@@ -1241,7 +1241,6 @@ MonoBehaviour:
   grabRadius: 0.5
   carryHeight: 0.3
   spawnPoint: {fileID: 636020747}
-  spawnHeightOffset: -0.5
 --- !u!1 &1494814231
 GameObject:
   m_ObjectHideFlags: 0
@@ -1253,6 +1252,7 @@ GameObject:
   - component: {fileID: 1494814233}
   - component: {fileID: 1494814232}
   - component: {fileID: 1494814234}
+  - component: {fileID: 1494814235}
   m_Layer: 0
   m_Name: Blue_Leaver_0
   m_TagString: Untagged
@@ -1366,6 +1366,19 @@ CircleCollider2D:
   m_CompositeOrder: 0
   m_Offset: {x: 0, y: 0}
   m_Radius: 0.11
+--- !u!114 &1494814235
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1494814231}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0b71df520aead9144a8b36f13150efe9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  leverRotation: 90
 --- !u!1 &1497480335
 GameObject:
   m_ObjectHideFlags: 0
