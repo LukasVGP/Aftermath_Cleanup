@@ -10,17 +10,26 @@ public class Furnace : MonoBehaviour
     {
         if (other.TryGetComponent<ZombieBody>(out ZombieBody body))
         {
-            SpawnGoldCoin();
+            Vector3 zombiePosition = body.transform.position;
             Destroy(body.gameObject);
+            SpawnGoldCoin(zombiePosition);
         }
     }
 
-    private void SpawnGoldCoin()
+    private void SpawnGoldCoin(Vector3 spawnPosition)
     {
-        GameObject coin = Instantiate(goldCoinPrefab, coinSpawnPoint.position, Quaternion.identity);
-        if (conveyorBelt != null)
+        GameObject coin = Instantiate(goldCoinPrefab, spawnPosition, Quaternion.identity);
+
+        // Add necessary components to the coin
+        if (!coin.GetComponent<Rigidbody2D>())
         {
-            coin.transform.position = conveyorBelt.GetSpawnPoint().position;
+            Rigidbody2D rb = coin.AddComponent<Rigidbody2D>();
+            rb.bodyType = RigidbodyType2D.Kinematic;
+        }
+
+        if (!coin.GetComponent<CircleCollider2D>())
+        {
+            coin.AddComponent<CircleCollider2D>();
         }
     }
 }
