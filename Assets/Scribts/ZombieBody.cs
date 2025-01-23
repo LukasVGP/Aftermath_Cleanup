@@ -6,6 +6,7 @@ public class ZombieBody : MonoBehaviour
     public Transform headPosition;
     public Transform feetPosition;
     [SerializeField] private float grabRadius = 0.5f;
+    [SerializeField] private float carryHeight = 1.5f; // Height above players when carried
 
     private MonoBehaviour headCarrier;
     private MonoBehaviour feetCarrier;
@@ -53,11 +54,23 @@ public class ZombieBody : MonoBehaviour
             if (player is BluePlayerController bluePlayer) bluePlayer.GrabBody(this);
         }
 
+        UpdateCarryState();
+    }
+
+    private void UpdateCarryState()
+    {
+        bool wasCarried = isBeingCarried;
         isBeingCarried = (headCarrier != null && feetCarrier != null);
+
         if (isBeingCarried)
         {
             rb.bodyType = RigidbodyType2D.Kinematic;
             rb.linearVelocity = Vector2.zero;
+            rb.angularVelocity = 0f;
+        }
+        else if (wasCarried)
+        {
+            DropBody();
         }
     }
 
@@ -65,19 +78,15 @@ public class ZombieBody : MonoBehaviour
     {
         if (player == headCarrier) headCarrier = null;
         if (player == feetCarrier) feetCarrier = null;
-
-        if (headCarrier == null || feetCarrier == null)
-        {
-            DropBody();
-        }
+        UpdateCarryState();
     }
 
     private void DropBody()
     {
-        isBeingCarried = false;
         rb.bodyType = RigidbodyType2D.Dynamic;
         headCarrier = null;
         feetCarrier = null;
+        isBeingCarried = false;
         transform.rotation = defaultRotation;
     }
 
@@ -91,6 +100,7 @@ public class ZombieBody : MonoBehaviour
         if (isBeingCarried && headCarrier != null && feetCarrier != null)
         {
             Vector3 midPoint = (headCarrier.transform.position + feetCarrier.transform.position) / 2f;
+            midPoint.y += carryHeight;
             transform.position = midPoint;
             transform.rotation = defaultRotation;
         }
