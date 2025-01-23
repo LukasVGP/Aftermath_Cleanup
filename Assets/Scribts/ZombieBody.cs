@@ -2,54 +2,75 @@ using UnityEngine;
 
 public class ZombieBody : MonoBehaviour
 {
-    [SerializeField] private float tearDistance = 5f;
-    [SerializeField] private int fullBodyPoints = 100;
-    [SerializeField] private int halfBodyPoints = 40;
+    [Header("Grab Points")]
+    [Tooltip("Drag the head position empty GameObject here")]
+    public Transform headPosition;
+    [Tooltip("Drag the feet position empty GameObject here")]
+    public Transform feetPosition;
 
-    private RedPlayerController redPlayer;
-    private BluePlayerController bluePlayer;
-    private bool isTorn = false;
+    private RedPlayerController redCarrier;
+    private BluePlayerController blueCarrier;
     private bool isBeingCarried = false;
-
-    // Update the Start() method
-    private void Start()
-    {
-        redPlayer = Object.FindFirstObjectByType<RedPlayerController>();
-        bluePlayer = Object.FindFirstObjectByType<BluePlayerController>();
-    }
-
-
-    private void Update()
-    {
-        if (isBeingCarried && !isTorn)
-        {
-            float distance = Vector3.Distance(redPlayer.GetPosition(), bluePlayer.GetPosition());
-            if (distance > tearDistance)
-            {
-                TearApart();
-            }
-        }
-    }
 
     public void OnPickedUp(MonoBehaviour player)
     {
-        isBeingCarried = true;
-        transform.parent = player.transform;
+        if (player is RedPlayerController red && IsNearFeet(red.transform.position))
+        {
+            redCarrier = red;
+        }
+        else if (player is BluePlayerController blue && IsNearHead(blue.transform.position))
+        {
+            blueCarrier = blue;
+        }
+
+        isBeingCarried = (redCarrier != null && blueCarrier != null);
+        if (isBeingCarried)
+        {
+            UpdatePosition();
+        }
     }
 
     public void OnDropped()
     {
+        redCarrier = null;
+        blueCarrier = null;
         isBeingCarried = false;
         transform.parent = null;
     }
 
-    private void TearApart()
+    private bool IsNearHead(Vector3 position)
     {
-        isTorn = true;
-        // Spawn two half bodies
-        // Deduct points
-        GameManager.Instance.DeductPoints(fullBodyPoints - (halfBodyPoints * 2));
+        return Vector3.Distance(position, headPosition.position) < 1f;
     }
 
-    public bool IsBeingCarried() => isBeingCarried;
+    private bool IsNearFeet(Vector3 position)
+    {
+        return Vector3.Distance(position, feetPosition.position) < 1f;
+    }
+
+    private void UpdatePosition()
+    {
+        if (isBeingCarried && redCarrier != null && blueCarrier != null)
+        {
+            Vector3 midPoint = (redCarrier.transform.position + blueCarrier.transform.position) / 2f;
+            transform.position = midPoint;
+
+            Vector3 direction = (blueCarrier.transform.position - redCarrier.transform.position).normalized;
+            float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
+            transform.rotation = Quaternion.Euler(0, 0, angle);
+        }
+    }
+
+    private void Update()
+    {
+        if (isBeingCarried)
+        {
+            UpdatePosition();
+        }
+    }
+
+    public bool IsBeingCarried()
+    {
+        return isBeingCarried;
+    }
 }

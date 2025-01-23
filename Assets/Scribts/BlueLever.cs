@@ -2,34 +2,28 @@ using UnityEngine;
 
 public class BlueLever : MonoBehaviour
 {
-    [SerializeField] private ConveyorBelt conveyorBelt;
-    [SerializeField] private float leverRotation = 45f;
-    private bool isActivated = false;
+    [SerializeField] private float leverRotation = 90f;
     private Animator animator;
+    private ConveyorBelt conveyorBelt;
 
-    void Start()
+    private void Start()
     {
         animator = GetComponent<Animator>();
+        conveyorBelt = FindFirstObjectByType<ConveyorBelt>();
     }
 
     public void ActivateLever()
     {
-        isActivated = true;
-        animator.SetBool("IsActivated", true);
+        // Use the leverRotation field
         transform.rotation = Quaternion.Euler(0, 0, leverRotation);
-        conveyorBelt.ActivateBlueLever();
+        animator?.SetBool("IsActivated", true);
+        conveyorBelt?.Activate();
     }
 
     public void DeactivateLever()
     {
-        isActivated = false;
-        animator.SetBool("IsActivated", false);
         transform.rotation = Quaternion.Euler(0, 0, 0);
-        conveyorBelt.DeactivateBelt();
-    }
-
-    public bool IsActivated()
-    {
-        return isActivated;
+        animator?.SetBool("IsActivated", false);
+        conveyorBelt?.Deactivate();
     }
 }

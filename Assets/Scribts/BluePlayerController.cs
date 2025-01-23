@@ -3,6 +3,7 @@ using UnityEngine;
 public class BluePlayerController : MonoBehaviour
 {
     [SerializeField] private float moveSpeed = 5f;
+    [SerializeField] private float jumpForce = 10f;
     [SerializeField] private float interactRange = 2f;
 
     private Rigidbody2D rb;
@@ -10,6 +11,7 @@ public class BluePlayerController : MonoBehaviour
     private bool isCarrying = false;
     private ZombieBody carriedBody;
     private RedPlayerController otherPlayer;
+    private bool isGrounded;
 
     void Start()
     {
@@ -20,19 +22,30 @@ public class BluePlayerController : MonoBehaviour
 
     void Update()
     {
-        // Movement
-        float horizontal = 0f;
-        float vertical = 0f;
+        HandleActions();
+    }
 
-        if (Input.GetKey(KeyCode.Keypad4)) horizontal -= 1f;
-        if (Input.GetKey(KeyCode.Keypad6)) horizontal += 1f;
-        if (Input.GetKey(KeyCode.Keypad8)) vertical += 1f;
-        if (Input.GetKey(KeyCode.Keypad5)) vertical -= 1f;
+    void FixedUpdate()
+    {
+        HandleMovement();
+    }
 
-        Vector2 movement = new Vector2(horizontal, vertical).normalized * moveSpeed;
-        rb.linearVelocity = movement;
+    private void HandleMovement()
+    {
+        float horizontalMovement = 0f;
 
-        // Actions
+        if (Input.GetKey(KeyCode.Keypad4)) horizontalMovement -= 1f;
+        if (Input.GetKey(KeyCode.Keypad6)) horizontalMovement += 1f;
+        if (Input.GetKey(KeyCode.Keypad8) && isGrounded)
+        {
+            rb.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
+        }
+
+        rb.linearVelocity = new Vector2(horizontalMovement * moveSpeed, rb.linearVelocity.y);
+    }
+
+    private void HandleActions()
+    {
         if (Input.GetKeyDown(KeyCode.Keypad9))
         {
             TryInteractWithLever();
@@ -70,7 +83,7 @@ public class BluePlayerController : MonoBehaviour
         foreach (Collider2D collider in colliders)
         {
             ZombieBody body = collider.GetComponent<ZombieBody>();
-            if (body != null && !body.IsBeingCarried())
+            if (body != null && !body.IsBeingCarried() && Vector3.Distance(transform.position, body.headPosition.position) < interactRange)
             {
                 PickUpBody(body);
                 break;
@@ -78,11 +91,15 @@ public class BluePlayerController : MonoBehaviour
         }
     }
 
+
     private void PickUpBody(ZombieBody body)
     {
-        isCarrying = true;
-        carriedBody = body;
-        body.OnPickedUp(this);
+        if (otherPlayer.IsCarrying())
+        {
+            isCarrying = true;
+            carriedBody = body;
+            body.OnPickedUp(this);
+        }
     }
 
     private void DropBody()
@@ -92,6 +109,22 @@ public class BluePlayerController : MonoBehaviour
             carriedBody.OnDropped();
             isCarrying = false;
             carriedBody = null;
+        }
+    }
+
+    private void OnCollisionStay2D(Collision2D collision)
+    {
+        if (collision.gameObject.CompareTag("Ground"))
+        {
+            isGrounded = true;
+        }
+    }
+
+    private void OnCollisionExit2D(Collision2D collision)
+    {
+        if (collision.gameObject.CompareTag("Ground"))
+        {
+            isGrounded = false;
         }
     }
 

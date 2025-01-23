@@ -2,10 +2,10 @@ using UnityEngine;
 
 public class ConveyorBelt : MonoBehaviour
 {
-    [SerializeField] private float beltSpeed = 2f;
-    [SerializeField] private Transform startPoint;
+    [SerializeField] private Transform spawnPoint;
     [SerializeField] private Transform endPoint;
-
+    [SerializeField] private float beltSpeed = 2f;
+    [SerializeField] private Vector2 moveDirection = Vector2.right;
     private bool isActive = false;
     private Animator animator;
 
@@ -14,7 +14,29 @@ public class ConveyorBelt : MonoBehaviour
         animator = GetComponent<Animator>();
     }
 
-    void Update()
+    public void Activate()
+    {
+        isActive = true;
+        animator?.SetBool("IsMoving", true);
+    }
+
+    public void Deactivate()
+    {
+        isActive = false;
+        animator?.SetBool("IsMoving", false);
+    }
+
+    public void PlaceBodyOnBelt(ZombieBody body)
+    {
+        if (body != null && spawnPoint != null)
+        {
+            body.transform.position = spawnPoint.position;
+            body.transform.parent = null;
+            body.OnDropped();
+        }
+    }
+
+    private void Update()
     {
         if (isActive)
         {
@@ -22,27 +44,16 @@ public class ConveyorBelt : MonoBehaviour
         }
     }
 
-    public void ActivateBlueLever()
-    {
-        isActive = true;
-        animator.SetBool("IsMoving", true);
-    }
-
-    public void DeactivateBelt()
-    {
-        isActive = false;
-        animator.SetBool("IsMoving", false);
-    }
-
     private void MoveItems()
     {
-        Collider2D[] items = Physics2D.OverlapAreaAll(startPoint.position, endPoint.position);
+        if (!isActive || spawnPoint == null || endPoint == null) return;
+
+        Collider2D[] items = Physics2D.OverlapAreaAll(spawnPoint.position, endPoint.position);
         foreach (Collider2D item in items)
         {
-            ZombieBody body = item.GetComponent<ZombieBody>();
-            if (body != null)
+            if (item.TryGetComponent<ZombieBody>(out var body))
             {
-                item.transform.Translate(Vector2.right * beltSpeed * Time.deltaTime);
+                item.transform.Translate(moveDirection.normalized * beltSpeed * Time.deltaTime);
             }
         }
     }

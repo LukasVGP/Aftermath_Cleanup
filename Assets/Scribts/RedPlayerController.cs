@@ -3,6 +3,7 @@ using UnityEngine;
 public class RedPlayerController : MonoBehaviour
 {
     [SerializeField] private float moveSpeed = 5f;
+    [SerializeField] private float jumpForce = 10f;
     [SerializeField] private float interactRange = 2f;
 
     private Rigidbody2D rb;
@@ -10,8 +11,8 @@ public class RedPlayerController : MonoBehaviour
     private bool isCarrying = false;
     private ZombieBody carriedBody;
     private BluePlayerController otherPlayer;
+    private bool isGrounded;
 
-    // Update the Start() method
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
@@ -19,39 +20,38 @@ public class RedPlayerController : MonoBehaviour
         otherPlayer = Object.FindFirstObjectByType<BluePlayerController>();
     }
 
-
     void Update()
     {
-        // Movement
-        float horizontal = 0f;
-        float vertical = 0f;
+        HandleActions();
+    }
 
-        if (Input.GetKey(KeyCode.A)) horizontal -= 1f;
-        if (Input.GetKey(KeyCode.D)) horizontal += 1f;
-        if (Input.GetKey(KeyCode.W)) vertical += 1f;
-        if (Input.GetKey(KeyCode.S)) vertical -= 1f;
+    void FixedUpdate()
+    {
+        HandleMovement();
+    }
 
-        Vector2 movement = new Vector2(horizontal, vertical).normalized * moveSpeed;
-        rb.linearVelocity = movement;
+    private void HandleMovement()
+    {
+        float horizontalMovement = 0f;
 
+        if (Input.GetKey(KeyCode.A)) horizontalMovement -= 1f;
+        if (Input.GetKey(KeyCode.D)) horizontalMovement += 1f;
+        if (Input.GetKey(KeyCode.W) && isGrounded)
+        {
+            rb.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
+        }
+
+        rb.linearVelocity = new Vector2(horizontalMovement * moveSpeed, rb.linearVelocity.y);
+    }
+
+    private void HandleActions()
+    {
         if (Input.GetKeyDown(KeyCode.E))
         {
             TryInteractWithLever();
         }
 
-        // Existing lifting code
         if (Input.GetKeyDown(KeyCode.Q))
-        {
-            TryLiftZombieBody();
-        }
-
-        // Actions
-        if (Input.GetKeyDown(KeyCode.E)) // Use action
-        {
-            TryInteractWithLever();
-        }
-
-        if (Input.GetKeyDown(KeyCode.Q)) // Lift action
         {
             TryLiftZombieBody();
         }
@@ -59,14 +59,13 @@ public class RedPlayerController : MonoBehaviour
 
     private void TryInteractWithLever()
     {
-        // Check for nearby lever and activate it
         Collider2D[] colliders = Physics2D.OverlapCircleAll(transform.position, interactRange);
         foreach (Collider2D collider in colliders)
         {
-            FurnaceLid lid = collider.GetComponent<FurnaceLid>();
-            if (lid != null)
+            RedLever lever = collider.GetComponent<RedLever>();
+            if (lever != null)
             {
-                lid.ActivateRedLever();
+                lever.ActivateLever();
                 break;
             }
         }
@@ -84,19 +83,18 @@ public class RedPlayerController : MonoBehaviour
         foreach (Collider2D collider in colliders)
         {
             ZombieBody body = collider.GetComponent<ZombieBody>();
-            if (body != null && !body.IsBeingCarried())
+            if (body != null && !body.IsBeingCarried() &&
+                Vector3.Distance(transform.position, body.feetPosition.position) < interactRange)
             {
-                PickUpBody(body);
+                if (otherPlayer.IsCarrying())
+                {
+                    isCarrying = true;
+                    carriedBody = body;
+                    body.OnPickedUp(this);
+                }
                 break;
             }
         }
-    }
-
-    private void PickUpBody(ZombieBody body)
-    {
-        isCarrying = true;
-        carriedBody = body;
-        body.OnPickedUp(this);
     }
 
     private void DropBody()
@@ -106,6 +104,22 @@ public class RedPlayerController : MonoBehaviour
             carriedBody.OnDropped();
             isCarrying = false;
             carriedBody = null;
+        }
+    }
+
+    private void OnCollisionStay2D(Collision2D collision)
+    {
+        if (collision.gameObject.CompareTag("Ground"))
+        {
+            isGrounded = true;
+        }
+    }
+
+    private void OnCollisionExit2D(Collision2D collision)
+    {
+        if (collision.gameObject.CompareTag("Ground"))
+        {
+            isGrounded = false;
         }
     }
 
