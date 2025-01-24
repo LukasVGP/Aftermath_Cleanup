@@ -2,12 +2,24 @@ using UnityEngine;
 
 public class ZombieBody : MonoBehaviour
 {
+   
+    
+    
     [Header("Grab Points")]
     public Transform headPosition;
     public Transform feetPosition;
     [SerializeField] private float grabRadius = 0.5f;
     [SerializeField] private float carryHeight = 1.5f;
     [SerializeField] private Transform spawnPoint;
+
+    [Header("Tearing Settings")]
+    [SerializeField] private float baseBodyLength = 2f;
+    [SerializeField] private float tearMultiplier = 2f;
+    [SerializeField] private GameObject upperHalfPrefab;
+    [SerializeField] private GameObject lowerHalfPrefab;
+    [SerializeField] private GameObject intestinesPrefab;
+    [SerializeField] private Transform tearPoint;
+    [SerializeField] private StrainMeter strainMeter;
 
     private MonoBehaviour headCarrier;
     private MonoBehaviour feetCarrier;
@@ -88,11 +100,59 @@ public class ZombieBody : MonoBehaviour
             rb.constraints = RigidbodyConstraints2D.FreezeRotation;
             rb.linearVelocity = Vector2.zero;
             rb.angularVelocity = 0f;
+            strainMeter.SetTarget(transform); // Show and follow zombie
         }
         else if (wasCarried)
         {
+            strainMeter.SetTarget(null); // Hide meter
             DropBody();
         }
+    }
+
+
+    private void Update()
+    {
+        if (isBeingCarried && headCarrier != null && feetCarrier != null)
+        {
+            float currentDistance = Vector2.Distance(headCarrier.transform.position, feetCarrier.transform.position);
+            strainMeter.UpdateStrain(currentDistance);
+
+            if (currentDistance >= baseBodyLength * tearMultiplier)
+            {
+                TearApart();
+            }
+            else
+            {
+                Vector3 midPoint = (headCarrier.transform.position + feetCarrier.transform.position) / 2f;
+                midPoint.y += carryHeight;
+                transform.SetPositionAndRotation(midPoint, defaultRotation);
+            }
+        }
+    }
+
+    private void TearApart()
+    {
+        // Spawn upper half
+        GameObject upperHalf = Instantiate(upperHalfPrefab, headPosition.position, Quaternion.identity);
+        ZombieHalf upperHalfScript = upperHalf.GetComponent<ZombieHalf>();
+        if (upperHalfScript != null && headCarrier != null)
+        {
+            upperHalfScript.SetCarrier(headCarrier);
+        }
+
+        // Spawn lower half
+        GameObject lowerHalf = Instantiate(lowerHalfPrefab, feetPosition.position, Quaternion.identity);
+        ZombieHalf lowerHalfScript = lowerHalf.GetComponent<ZombieHalf>();
+        if (lowerHalfScript != null && feetCarrier != null)
+        {
+            lowerHalfScript.SetCarrier(feetCarrier);
+        }
+
+        // Spawn intestines effect
+        GameObject intestines = Instantiate(intestinesPrefab, tearPoint.position, Quaternion.identity);
+
+        // Destroy original zombie body
+        Destroy(gameObject);
     }
 
     public void Release(MonoBehaviour player)
@@ -115,16 +175,6 @@ public class ZombieBody : MonoBehaviour
     public void OnDropped()
     {
         DropBody();
-    }
-
-    private void Update()
-    {
-        if (isBeingCarried && headCarrier != null && feetCarrier != null)
-        {
-            Vector3 midPoint = (headCarrier.transform.position + feetCarrier.transform.position) / 2f;
-            midPoint.y += carryHeight;
-            transform.SetPositionAndRotation(midPoint, defaultRotation);
-        }
     }
 
     public bool IsBeingCarried() => isBeingCarried;

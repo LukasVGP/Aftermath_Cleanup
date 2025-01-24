@@ -5,7 +5,7 @@ public class GoldCoin : MonoBehaviour
     [SerializeField] private int coinValue = 100;
     private bool canBePickedUp = false;
     private Rigidbody2D rb;
-    private CircleCollider2D collider;
+    private CircleCollider2D circleCollider;
 
     void Start()
     {
@@ -18,12 +18,12 @@ public class GoldCoin : MonoBehaviour
         rb.gravityScale = 0;
         rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
 
-        collider = GetComponent<CircleCollider2D>();
-        if (collider == null)
+        circleCollider = GetComponent<CircleCollider2D>();
+        if (circleCollider == null)
         {
-            collider = gameObject.AddComponent<CircleCollider2D>();
+            circleCollider = gameObject.AddComponent<CircleCollider2D>();
         }
-        collider.isTrigger = false;
+        circleCollider.isTrigger = false;
     }
 
     private void OnCollisionEnter2D(Collision2D collision)
@@ -32,7 +32,6 @@ public class GoldCoin : MonoBehaviour
         {
             canBePickedUp = true;
         }
-
         if (canBePickedUp && (collision.gameObject.CompareTag("RedPlayer") || collision.gameObject.CompareTag("BluePlayer")))
         {
             GameManager.Instance?.AddScore(coinValue);
