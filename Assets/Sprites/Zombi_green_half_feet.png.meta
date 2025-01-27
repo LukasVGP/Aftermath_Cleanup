@@ -147,7 +147,8 @@ TextureImporter:
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      Zombi_green_half_feet_0: 3586430667667219514
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
