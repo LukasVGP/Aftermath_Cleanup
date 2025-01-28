@@ -2,15 +2,11 @@ using UnityEngine;
 
 public class ZombieBody : MonoBehaviour
 {
-   
-    
-    
     [Header("Grab Points")]
     public Transform headPosition;
     public Transform feetPosition;
     [SerializeField] private float grabRadius = 0.5f;
     [SerializeField] private float carryHeight = 1.5f;
-    [SerializeField] private Transform spawnPoint;
 
     [Header("Tearing Settings")]
     [SerializeField] private float baseBodyLength = 2f;
@@ -24,6 +20,7 @@ public class ZombieBody : MonoBehaviour
     private MonoBehaviour headCarrier;
     private MonoBehaviour feetCarrier;
     private bool isBeingCarried = false;
+    private bool hasTornApart = false;
     private Rigidbody2D rb;
     private Quaternion defaultRotation;
     private ConveyorBelt conveyorBelt;
@@ -100,22 +97,33 @@ public class ZombieBody : MonoBehaviour
             rb.constraints = RigidbodyConstraints2D.FreezeRotation;
             rb.linearVelocity = Vector2.zero;
             rb.angularVelocity = 0f;
-            strainMeter.SetTarget(transform); // Show and follow zombie
+
+            if (strainMeter != null)
+            {
+                strainMeter.gameObject.SetActive(true);
+                strainMeter.SetTarget(transform);
+            }
         }
         else if (wasCarried)
         {
-            strainMeter.SetTarget(null); // Hide meter
+            if (strainMeter != null)
+            {
+                strainMeter.gameObject.SetActive(false);
+                strainMeter.SetTarget(null);
+            }
             DropBody();
         }
     }
-
 
     private void Update()
     {
         if (isBeingCarried && headCarrier != null && feetCarrier != null)
         {
             float currentDistance = Vector2.Distance(headCarrier.transform.position, feetCarrier.transform.position);
-            strainMeter.UpdateStrain(currentDistance);
+            if (strainMeter != null)
+            {
+                strainMeter.UpdateStrain(currentDistance);
+            }
 
             if (currentDistance >= baseBodyLength * tearMultiplier)
             {
@@ -132,26 +140,46 @@ public class ZombieBody : MonoBehaviour
 
     private void TearApart()
     {
-        // Spawn upper half
-        GameObject upperHalf = Instantiate(upperHalfPrefab, headPosition.position, Quaternion.identity);
-        ZombieHalf upperHalfScript = upperHalf.GetComponent<ZombieHalf>();
-        if (upperHalfScript != null && headCarrier != null)
+        if (hasTornApart || !enabled) return;
+        hasTornApart = true;
+
+        // Spawn upper half with carrier
+        if (upperHalfPrefab != null && headPosition != null)
         {
-            upperHalfScript.SetCarrier(headCarrier);
+            GameObject upperHalf = Instantiate(upperHalfPrefab, headPosition.position, Quaternion.identity);
+            var upperScript = upperHalf.GetComponent<ZombieHalf>();
+            if (upperScript != null && headCarrier != null)
+            {
+                upperScript.InitializeHalf(true, false);
+                upperScript.SetCarrier(headCarrier);
+            }
         }
 
-        // Spawn lower half
-        GameObject lowerHalf = Instantiate(lowerHalfPrefab, feetPosition.position, Quaternion.identity);
-        ZombieHalf lowerHalfScript = lowerHalf.GetComponent<ZombieHalf>();
-        if (lowerHalfScript != null && feetCarrier != null)
+        // Spawn lower half with carrier
+        if (lowerHalfPrefab != null && feetPosition != null)
         {
-            lowerHalfScript.SetCarrier(feetCarrier);
+            GameObject lowerHalf = Instantiate(lowerHalfPrefab, feetPosition.position, Quaternion.identity);
+            var lowerScript = lowerHalf.GetComponent<ZombieHalf>();
+            if (lowerScript != null && feetCarrier != null)
+            {
+                lowerScript.InitializeHalf(false, true);
+                lowerScript.SetCarrier(feetCarrier);
+            }
         }
 
-        // Spawn intestines effect
-        GameObject intestines = Instantiate(intestinesPrefab, tearPoint.position, Quaternion.identity);
+        // Spawn intestines
+        if (intestinesPrefab != null && tearPoint != null)
+        {
+            GameObject intestine = Instantiate(intestinesPrefab, tearPoint.position, Quaternion.identity);
+            var rb = intestine.GetComponent<Rigidbody2D>();
+            if (rb != null)
+            {
+                rb.gravityScale = 1f;
+                rb.mass = 0.1f;
+                rb.AddForce(Vector2.down * 2f, ForceMode2D.Impulse);
+            }
+        }
 
-        // Destroy original zombie body
         Destroy(gameObject);
     }
 

@@ -4,8 +4,8 @@ public class GameManager : MonoBehaviour
 {
     public static GameManager Instance { get; private set; }
 
-    [SerializeField] private int currentScore = 0;
-    [SerializeField] private int targetScore = 1000;
+    [SerializeField] private ScoreUI scoreUI;
+    private int currentScore = 0;
 
     private void Awake()
     {
@@ -23,26 +23,6 @@ public class GameManager : MonoBehaviour
     public void AddScore(int points)
     {
         currentScore += points;
-        UpdateUI();
-        CheckWinCondition();
-    }
-
-    public void DeductPoints(int points)
-    {
-        currentScore -= points;
-        UpdateUI();
-    }
-
-    private void UpdateUI()
-    {
-        // Update score display
-    }
-
-    private void CheckWinCondition()
-    {
-        if (currentScore >= targetScore)
-        {
-            // Trigger win state
-        }
+        scoreUI?.UpdateScore(currentScore);
     }
 }

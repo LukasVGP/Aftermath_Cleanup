@@ -8,6 +8,8 @@ TagManager:
   - Ground
   - ConveyorBelt
   - FurnaceLid
+  - RedPlayer
+  - BluePlayer
   layers:
   - Default
   - TransparentFX
