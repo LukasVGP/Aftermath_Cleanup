@@ -146,11 +146,10 @@ public class ZombieBody : MonoBehaviour
         // Spawn upper half with carrier
         if (upperHalfPrefab != null && headPosition != null)
         {
-            GameObject upperHalf = Instantiate(upperHalfPrefab, headPosition.position, Quaternion.identity);
+            GameObject upperHalf = Instantiate(upperHalfPrefab, headPosition.position + Vector3.up * 2f, Quaternion.identity);
             var upperScript = upperHalf.GetComponent<ZombieHalf>();
             if (upperScript != null && headCarrier != null)
             {
-                upperScript.InitializeHalf(true, false);
                 upperScript.SetCarrier(headCarrier);
             }
         }
@@ -158,27 +157,31 @@ public class ZombieBody : MonoBehaviour
         // Spawn lower half with carrier
         if (lowerHalfPrefab != null && feetPosition != null)
         {
-            GameObject lowerHalf = Instantiate(lowerHalfPrefab, feetPosition.position, Quaternion.identity);
+            GameObject lowerHalf = Instantiate(lowerHalfPrefab, feetPosition.position + Vector3.up * 2f, Quaternion.identity);
             var lowerScript = lowerHalf.GetComponent<ZombieHalf>();
             if (lowerScript != null && feetCarrier != null)
             {
-                lowerScript.InitializeHalf(false, true);
                 lowerScript.SetCarrier(feetCarrier);
             }
         }
 
-        // Spawn intestines
+        // Spawn intestines with enhanced physics
+        // Update the intestines spawn section in TearApart method
         if (intestinesPrefab != null && tearPoint != null)
         {
             GameObject intestine = Instantiate(intestinesPrefab, tearPoint.position, Quaternion.identity);
-            var rb = intestine.GetComponent<Rigidbody2D>();
-            if (rb != null)
+            var intestineRb = intestine.GetComponent<Rigidbody2D>();
+            if (intestineRb != null)
             {
-                rb.gravityScale = 1f;
-                rb.mass = 0.1f;
-                rb.AddForce(Vector2.down * 2f, ForceMode2D.Impulse);
+                intestineRb.bodyType = RigidbodyType2D.Dynamic;
+                intestineRb.gravityScale = 5f; // Much higher gravity
+                intestineRb.mass = 1f;
+                intestineRb.linearDamping = 0.1f; // Very low drag
+                intestineRb.constraints = RigidbodyConstraints2D.None; // No constraints
+                intestineRb.AddForce(new Vector2(Random.Range(-2f, 2f), -10f), ForceMode2D.Impulse); // Strong downward force
             }
         }
+
 
         Destroy(gameObject);
     }

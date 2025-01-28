@@ -2,14 +2,36 @@ using UnityEngine;
 
 public class IntestinesEffect : MonoBehaviour
 {
+    [SerializeField] private float lifetime = 3f;
+    [SerializeField] private float fadeSpeed = 1f;
+
+    private SpriteRenderer spriteRenderer;
+    private float currentLifetime;
+
     private void Start()
     {
-        // The GameObject this script is attached to will be the intestine
-        gameObject.AddComponent<BoxCollider2D>();
+        spriteRenderer = GetComponent<SpriteRenderer>();
+        if (spriteRenderer == null)
+        {
+            spriteRenderer = gameObject.AddComponent<SpriteRenderer>();
+        }
+        currentLifetime = lifetime;
+    }
 
-        Rigidbody2D rb = gameObject.AddComponent<Rigidbody2D>();
-        rb.gravityScale = 1f;
+    private void Update()
+    {
+        currentLifetime -= Time.deltaTime;
 
-        Destroy(gameObject, 2f);
+        if (currentLifetime <= 0)
+        {
+            float alpha = spriteRenderer.color.a;
+            alpha -= fadeSpeed * Time.deltaTime;
+            spriteRenderer.color = new Color(spriteRenderer.color.r, spriteRenderer.color.g, spriteRenderer.color.b, alpha);
+
+            if (alpha <= 0)
+            {
+                Destroy(gameObject);
+            }
+        }
     }
 }

@@ -581,8 +581,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   lifetime: 2
-  particleCount: 1
-  spreadRadius: 1
+  fadeSpeed: 1
 --- !u!50 &-354827522177088160
 Rigidbody2D:
   serializedVersion: 5
