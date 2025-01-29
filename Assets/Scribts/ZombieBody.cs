@@ -76,6 +76,7 @@ public class ZombieBody : MonoBehaviour
             if (player is RedPlayerController redPlayer) redPlayer.GrabBody(this);
             if (player is BluePlayerController bluePlayer) bluePlayer.GrabBody(this);
         }
+
         if (distanceToFeet <= grabRadius && feetCarrier == null)
         {
             feetCarrier = player;
@@ -120,6 +121,7 @@ public class ZombieBody : MonoBehaviour
         if (isBeingCarried && headCarrier != null && feetCarrier != null)
         {
             float currentDistance = Vector2.Distance(headCarrier.transform.position, feetCarrier.transform.position);
+
             if (strainMeter != null)
             {
                 strainMeter.UpdateStrain(currentDistance);
@@ -143,7 +145,6 @@ public class ZombieBody : MonoBehaviour
         if (hasTornApart || !enabled) return;
         hasTornApart = true;
 
-        // Spawn upper half with carrier
         if (upperHalfPrefab != null && headPosition != null)
         {
             GameObject upperHalf = Instantiate(upperHalfPrefab, headPosition.position + Vector3.up * 2f, Quaternion.identity);
@@ -154,7 +155,6 @@ public class ZombieBody : MonoBehaviour
             }
         }
 
-        // Spawn lower half with carrier
         if (lowerHalfPrefab != null && feetPosition != null)
         {
             GameObject lowerHalf = Instantiate(lowerHalfPrefab, feetPosition.position + Vector3.up * 2f, Quaternion.identity);
@@ -165,8 +165,6 @@ public class ZombieBody : MonoBehaviour
             }
         }
 
-        // Spawn intestines with enhanced physics
-        // Update the intestines spawn section in TearApart method
         if (intestinesPrefab != null && tearPoint != null)
         {
             GameObject intestine = Instantiate(intestinesPrefab, tearPoint.position, Quaternion.identity);
@@ -174,39 +172,44 @@ public class ZombieBody : MonoBehaviour
             if (intestineRb != null)
             {
                 intestineRb.bodyType = RigidbodyType2D.Dynamic;
-                intestineRb.gravityScale = 5f; // Much higher gravity
+                intestineRb.gravityScale = 5f;
                 intestineRb.mass = 1f;
-                intestineRb.linearDamping = 0.1f; // Very low drag
-                intestineRb.constraints = RigidbodyConstraints2D.None; // No constraints
-                intestineRb.AddForce(new Vector2(Random.Range(-2f, 2f), -10f), ForceMode2D.Impulse); // Strong downward force
+                intestineRb.linearDamping = 0.1f;
+                intestineRb.constraints = RigidbodyConstraints2D.FreezeRotation;
+                intestineRb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
+                intestineRb.AddForce(new Vector2(Random.Range(-2f, 2f), -10f), ForceMode2D.Impulse);
             }
         }
-
 
         Destroy(gameObject);
     }
 
-    public void Release(MonoBehaviour player)
+    public void Release(MonoBehaviour releaser)
     {
-        if (player == headCarrier) headCarrier = null;
-        if (player == feetCarrier) feetCarrier = null;
+        if (releaser == headCarrier)
+        {
+            headCarrier = null;
+        }
+        else if (releaser == feetCarrier)
+        {
+            feetCarrier = null;
+        }
+
         UpdateCarryState();
     }
 
     private void DropBody()
     {
-        rb.bodyType = RigidbodyType2D.Dynamic;
-        rb.constraints = RigidbodyConstraints2D.FreezeRotation | RigidbodyConstraints2D.FreezePositionX;
-        headCarrier = null;
-        feetCarrier = null;
-        isBeingCarried = false;
-        transform.rotation = defaultRotation;
+        if (rb != null)
+        {
+            rb.bodyType = RigidbodyType2D.Dynamic;
+            rb.constraints = RigidbodyConstraints2D.FreezeRotation;
+            rb.gravityScale = 1f;
+        }
     }
 
-    public void OnDropped()
+    public bool IsBeingCarried()
     {
-        DropBody();
+        return isBeingCarried;
     }
-
-    public bool IsBeingCarried() => isBeingCarried;
 }

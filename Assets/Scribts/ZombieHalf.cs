@@ -26,7 +26,7 @@ public class ZombieHalf : MonoBehaviour
     private void InitializeRigidbody()
     {
         rb.bodyType = RigidbodyType2D.Dynamic;
-        rb.constraints = RigidbodyConstraints2D.FreezeRotation | RigidbodyConstraints2D.FreezePositionX;
+        rb.constraints = RigidbodyConstraints2D.FreezeRotation;
         rb.mass = 50f;
         rb.linearDamping = 10f;
         rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
@@ -52,19 +52,17 @@ public class ZombieHalf : MonoBehaviour
 
     private void OnTriggerStay2D(Collider2D other)
     {
-        if (!isBeingCarried && !hasBeenPickedUp)
+        if (!isBeingCarried)
         {
             if (other.TryGetComponent(out RedPlayerController redPlayer) && redPlayer.WantsToGrab)
             {
                 SetCarrier(redPlayer);
                 redPlayer.GrabBody(null);
-                hasBeenPickedUp = true;
             }
             if (other.TryGetComponent(out BluePlayerController bluePlayer) && bluePlayer.WantsToGrab)
             {
                 SetCarrier(bluePlayer);
                 bluePlayer.GrabBody(null);
-                hasBeenPickedUp = true;
             }
         }
     }
@@ -73,7 +71,6 @@ public class ZombieHalf : MonoBehaviour
     {
         carrier = newCarrier;
         isBeingCarried = (carrier != null);
-
         if (isBeingCarried && rb != null)
         {
             rb.bodyType = RigidbodyType2D.Kinematic;
@@ -89,7 +86,6 @@ public class ZombieHalf : MonoBehaviour
         {
             Vector3 offset = Vector3.up * carryHeight;
             transform.position = carrier.transform.position + offset;
-
             if ((carrier is RedPlayerController red && !red.WantsToGrab) ||
                 (carrier is BluePlayerController blue && !blue.WantsToGrab))
             {
@@ -98,7 +94,6 @@ public class ZombieHalf : MonoBehaviour
         }
     }
 
-    // Update the Release method
     public void Release()
     {
         carrier = null;
@@ -106,14 +101,16 @@ public class ZombieHalf : MonoBehaviour
         if (rb != null)
         {
             rb.bodyType = RigidbodyType2D.Dynamic;
-            rb.constraints = RigidbodyConstraints2D.FreezeRotation; // Removed FreezePositionX
+            rb.constraints = RigidbodyConstraints2D.FreezeRotation;
             rb.linearVelocity = Vector2.zero;
-            rb.gravityScale = 3f; // Increased gravity for faster falling
-            rb.mass = 2f; // Increased mass
-            rb.linearDamping = 0.2f; // Reduced drag
+            rb.angularVelocity = 0f;
+            rb.gravityScale = 3f;
+            rb.mass = 2f;
+            rb.linearDamping = 0.2f;
+            rb.simulated = true;
+            rb.WakeUp();
         }
     }
-
 
     public bool IsBeingCarried() => isBeingCarried;
     public int GetSilverCoinValue() => silverCoinValue;

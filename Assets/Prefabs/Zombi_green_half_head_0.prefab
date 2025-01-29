@@ -15,7 +15,7 @@ GameObject:
   - component: {fileID: 396933401552509761}
   m_Layer: 0
   m_Name: Zombi_green_half_head_0
-  m_TagString: Untagged
+  m_TagString: ZombieHalf
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -104,7 +104,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   isUpperHalf: 1
+  isLowerHalf: 0
   silverCoinValue: 50
+  grabRadius: 0.5
+  carryHeight: 2
 --- !u!61 &3790484096933720208
 BoxCollider2D:
   m_ObjectHideFlags: 0

@@ -10,6 +10,7 @@ TagManager:
   - FurnaceLid
   - RedPlayer
   - BluePlayer
+  - ZombieHalf
   layers:
   - Default
   - TransparentFX
