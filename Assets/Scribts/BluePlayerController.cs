@@ -5,8 +5,10 @@ public class BluePlayerController : MonoBehaviour
     [Header("Movement Settings")]
     [SerializeField] private float moveSpeed = 5f;
     [SerializeField] private float jumpForce = 10f;
+
     private Rigidbody2D rb;
     private bool isGrounded;
+    private bool isCarryingZombieHalf = false;
     public bool WantsToGrab { get; private set; }
     private ZombieBody carriedBody;
 
@@ -59,9 +61,21 @@ public class BluePlayerController : MonoBehaviour
         }
     }
 
+    public bool IsCarryingAnything()
+    {
+        return isCarryingZombieHalf || carriedBody != null;
+    }
+
     public void GrabBody(ZombieBody body)
     {
         carriedBody = body;
+    }
+
+    public bool IsCarryingZombieHalf() => isCarryingZombieHalf;
+
+    public void SetCarryingZombieHalf(bool carrying)
+    {
+        isCarryingZombieHalf = carrying;
     }
 
     private void OnCollisionStay2D(Collision2D collision)

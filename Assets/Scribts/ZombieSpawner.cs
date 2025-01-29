@@ -12,10 +12,12 @@ public class ZombieSpawner : MonoBehaviour
     [SerializeField] private GameObject zombiePrefab;
     [SerializeField] private float moveSpeed = 5f;
     [SerializeField] private float dropDelay = 0.5f;
+    [SerializeField] private float stopDistance = 0.01f;
 
     [Header("Wave Settings")]
     [SerializeField] private int maxWaves = 5;
     [SerializeField] private float timeBetweenWaves = 2f;
+    [SerializeField] private float pauseAtMoveInPoint = 0.5f;
 
     private int currentWave = 0;
     private int zombiesInScene = 0;
@@ -37,7 +39,7 @@ public class ZombieSpawner : MonoBehaviour
         }
         else
         {
-            GameManager.Instance.TriggerGameEnd();
+            GameManager.Instance?.TriggerGameEnd();
         }
     }
 
@@ -46,33 +48,58 @@ public class ZombieSpawner : MonoBehaviour
         Debug.Log($"Wave {currentWave} starting");
         isMoving = true;
 
-        // Stage 1: Move In
-        while (Vector3.Distance(transform.position, moveInPoint.position) > 0.1f)
+        // Move to spawn point
+        while ((moveInPoint.position - transform.position).magnitude > stopDistance)
         {
-            transform.position = Vector3.MoveTowards(transform.position, moveInPoint.position, moveSpeed * Time.deltaTime);
+            transform.position = Vector3.MoveTowards(
+                transform.position,
+                moveInPoint.position,
+                moveSpeed * Time.deltaTime
+            );
+            Debug.Log($"Moving to moveInPoint. Distance: {(moveInPoint.position - transform.position).magnitude}");
             yield return null;
         }
 
-        // Stage 2: Drop Zombies
+        // Lock at spawn position
         transform.position = moveInPoint.position;
+        Debug.Log("Reached moveInPoint");
+
+        yield return new WaitForSeconds(pauseAtMoveInPoint);
+
+        // Spawn wave zombies
         for (int i = 0; i < currentWave; i++)
         {
-            GameObject zombie = Instantiate(zombiePrefab, zombieDropPoint.position, zombiePrefab.transform.rotation);
+            GameObject zombie = Instantiate(
+                zombiePrefab,
+                zombieDropPoint.position,
+                zombiePrefab.transform.rotation
+            );
+
             zombiesInScene++;
-            Debug.Log($"Zombie {i + 1} spawned");
+            Debug.Log($"Spawned zombie {i + 1} of {currentWave}");
             yield return new WaitForSeconds(dropDelay);
         }
 
-        // Stage 3: Move Out
-        while (Vector3.Distance(transform.position, moveOutPoint.position) > 0.1f)
+        // Return to start
+        while ((moveOutPoint.position - transform.position).magnitude > stopDistance)
         {
-            transform.position = Vector3.MoveTowards(transform.position, moveOutPoint.position, moveSpeed * Time.deltaTime);
+            transform.position = Vector3.MoveTowards(
+                transform.position,
+                moveOutPoint.position,
+                moveSpeed * Time.deltaTime
+            );
             yield return null;
         }
 
         transform.position = moveOutPoint.position;
         isMoving = false;
         Debug.Log($"Wave {currentWave} complete");
+
+        if (zombiesInScene == 0 && zombiePartsInScene == 0)
+        {
+            yield return new WaitForSeconds(timeBetweenWaves);
+            StartNextWave();
+        }
     }
 
     private IEnumerator MonitorZombieDestruction(GameObject zombie)
@@ -118,10 +145,8 @@ public class ZombieSpawner : MonoBehaviour
             Gizmos.color = Color.blue;
             Gizmos.DrawWireSphere(moveInPoint.position, 0.5f);
             Gizmos.DrawWireSphere(moveOutPoint.position, 0.5f);
-
             Gizmos.color = Color.red;
             Gizmos.DrawWireSphere(zombieDropPoint.position, 0.5f);
-
             Gizmos.color = Color.yellow;
             Gizmos.DrawLine(moveOutPoint.position, moveInPoint.position);
         }

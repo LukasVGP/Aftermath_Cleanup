@@ -14,12 +14,38 @@ public class ZombieHalf : MonoBehaviour
     private ConveyorBelt conveyorBelt;
     private Quaternion defaultRotation;
     private bool isOnConveyor = false;
+    private Collider2D myCollider;
 
     private void Start()
     {
         rb = GetComponent<Rigidbody2D>();
+        myCollider = GetComponent<Collider2D>();
         defaultRotation = Quaternion.Euler(0, 0, -90f);
         InitializeRigidbody();
+
+        // Ignore collisions between all zombie halves
+        GameObject[] zombieHalves = GameObject.FindGameObjectsWithTag("ZombieHalf");
+        foreach (GameObject other in zombieHalves)
+        {
+            if (other != gameObject)
+            {
+                Physics2D.IgnoreCollision(myCollider, other.GetComponent<Collider2D>(), true);
+            }
+        }
+
+        // Ignore collisions with players from start
+        var redPlayer = GameObject.FindGameObjectWithTag("RedPlayer");
+        var bluePlayer = GameObject.FindGameObjectWithTag("BluePlayer");
+
+        if (redPlayer != null && redPlayer.GetComponent<Collider2D>() != null)
+        {
+            Physics2D.IgnoreCollision(myCollider, redPlayer.GetComponent<Collider2D>(), true);
+        }
+
+        if (bluePlayer != null && bluePlayer.GetComponent<Collider2D>() != null)
+        {
+            Physics2D.IgnoreCollision(myCollider, bluePlayer.GetComponent<Collider2D>(), true);
+        }
     }
 
     private void InitializeRigidbody()
@@ -55,15 +81,18 @@ public class ZombieHalf : MonoBehaviour
     {
         if (!isBeingCarried)
         {
-            if (other.TryGetComponent(out RedPlayerController redPlayer) && redPlayer.WantsToGrab)
+            RedPlayerController redPlayerController;
+            BluePlayerController bluePlayerController;
+
+            if (other.TryGetComponent(out redPlayerController) && redPlayerController.WantsToGrab && !redPlayerController.IsCarryingAnything())
             {
-                SetCarrier(redPlayer);
-                redPlayer.GrabBody(null);
+                SetCarrier(redPlayerController);
+                redPlayerController.GrabBody(null);
             }
-            if (other.TryGetComponent(out BluePlayerController bluePlayer) && bluePlayer.WantsToGrab)
+            if (other.TryGetComponent(out bluePlayerController) && bluePlayerController.WantsToGrab && !bluePlayerController.IsCarryingAnything())
             {
-                SetCarrier(bluePlayer);
-                bluePlayer.GrabBody(null);
+                SetCarrier(bluePlayerController);
+                bluePlayerController.GrabBody(null);
             }
         }
     }
@@ -72,6 +101,7 @@ public class ZombieHalf : MonoBehaviour
     {
         carrier = newCarrier;
         isBeingCarried = (carrier != null);
+
         if (isBeingCarried && rb != null)
         {
             rb.bodyType = RigidbodyType2D.Kinematic;
@@ -80,6 +110,15 @@ public class ZombieHalf : MonoBehaviour
             transform.position = carrier.transform.position + offset;
             transform.rotation = defaultRotation;
             isOnConveyor = false;
+
+            if (carrier is RedPlayerController redPlayerController)
+            {
+                redPlayerController.SetCarryingZombieHalf(true);
+            }
+            else if (carrier is BluePlayerController bluePlayerController)
+            {
+                bluePlayerController.SetCarryingZombieHalf(true);
+            }
         }
     }
 
@@ -90,6 +129,7 @@ public class ZombieHalf : MonoBehaviour
             Vector3 offset = Vector3.up * carryHeight;
             transform.position = carrier.transform.position + offset;
             transform.rotation = defaultRotation;
+
             if ((carrier is RedPlayerController red && !red.WantsToGrab) ||
                 (carrier is BluePlayerController blue && !blue.WantsToGrab))
             {
@@ -100,8 +140,18 @@ public class ZombieHalf : MonoBehaviour
 
     public void Release()
     {
+        if (carrier is RedPlayerController redPlayerController)
+        {
+            redPlayerController.SetCarryingZombieHalf(false);
+        }
+        else if (carrier is BluePlayerController bluePlayerController)
+        {
+            bluePlayerController.SetCarryingZombieHalf(false);
+        }
+
         carrier = null;
         isBeingCarried = false;
+
         if (rb != null)
         {
             if (!isOnConveyor)
@@ -115,6 +165,11 @@ public class ZombieHalf : MonoBehaviour
                 rb.linearDamping = 0.2f;
                 rb.simulated = true;
                 rb.WakeUp();
+
+                // Release slightly above current position
+                Vector3 releasePosition = transform.position;
+                releasePosition.y += 1f;
+                transform.position = releasePosition;
             }
             transform.rotation = defaultRotation;
         }
