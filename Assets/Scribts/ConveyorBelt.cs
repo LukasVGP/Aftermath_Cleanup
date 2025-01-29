@@ -2,12 +2,14 @@ using UnityEngine;
 
 public class ConveyorBelt : MonoBehaviour
 {
-    [SerializeField] private Transform spawnPoint;
+    [SerializeField] private Transform spawnPoint1;
+    [SerializeField] private Transform spawnPoint2;
     [SerializeField] private Transform endPoint;
     [SerializeField] private float beltSpeed = 2f;
     [SerializeField] private Vector2 moveDirection = Vector2.right;
     private bool isActive = false;
     private Animator animator;
+    private int currentSpawnPoint = 1;
 
     void Start()
     {
@@ -16,7 +18,16 @@ public class ConveyorBelt : MonoBehaviour
 
     public Transform GetSpawnPoint()
     {
-        return spawnPoint;
+        if (currentSpawnPoint == 1)
+        {
+            currentSpawnPoint = 2;
+            return spawnPoint1;
+        }
+        else
+        {
+            currentSpawnPoint = 1;
+            return spawnPoint2;
+        }
     }
 
     private void Update()
@@ -29,7 +40,12 @@ public class ConveyorBelt : MonoBehaviour
 
     private void MoveItems()
     {
-        Collider2D[] items = Physics2D.OverlapAreaAll(spawnPoint.position, new Vector2(endPoint.position.x, endPoint.position.y));
+        Vector2 searchStart = new Vector2(
+            Mathf.Min(spawnPoint1.position.x, spawnPoint2.position.x),
+            Mathf.Min(spawnPoint1.position.y, spawnPoint2.position.y)
+        );
+
+        Collider2D[] items = Physics2D.OverlapAreaAll(searchStart, new Vector2(endPoint.position.x, endPoint.position.y));
 
         foreach (Collider2D item in items)
         {

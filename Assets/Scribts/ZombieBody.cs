@@ -76,7 +76,6 @@ public class ZombieBody : MonoBehaviour
             if (player is RedPlayerController redPlayer) redPlayer.GrabBody(this);
             if (player is BluePlayerController bluePlayer) bluePlayer.GrabBody(this);
         }
-
         if (distanceToFeet <= grabRadius && feetCarrier == null)
         {
             feetCarrier = player;
@@ -121,7 +120,6 @@ public class ZombieBody : MonoBehaviour
         if (isBeingCarried && headCarrier != null && feetCarrier != null)
         {
             float currentDistance = Vector2.Distance(headCarrier.transform.position, feetCarrier.transform.position);
-
             if (strainMeter != null)
             {
                 strainMeter.UpdateStrain(currentDistance);
@@ -145,9 +143,11 @@ public class ZombieBody : MonoBehaviour
         if (hasTornApart || !enabled) return;
         hasTornApart = true;
 
+        // Spawn upper half with carrier
         if (upperHalfPrefab != null && headPosition != null)
         {
-            GameObject upperHalf = Instantiate(upperHalfPrefab, headPosition.position + Vector3.up * 2f, Quaternion.identity);
+            Quaternion upperRotation = Quaternion.Euler(0, 0, -90f);
+            GameObject upperHalf = Instantiate(upperHalfPrefab, headPosition.position + Vector3.up * 2f, upperRotation);
             var upperScript = upperHalf.GetComponent<ZombieHalf>();
             if (upperScript != null && headCarrier != null)
             {
@@ -155,9 +155,11 @@ public class ZombieBody : MonoBehaviour
             }
         }
 
+        // Spawn lower half with carrier
         if (lowerHalfPrefab != null && feetPosition != null)
         {
-            GameObject lowerHalf = Instantiate(lowerHalfPrefab, feetPosition.position + Vector3.up * 2f, Quaternion.identity);
+            Quaternion lowerRotation = Quaternion.Euler(0, 0, -90f);
+            GameObject lowerHalf = Instantiate(lowerHalfPrefab, feetPosition.position + Vector3.up * 2f, lowerRotation);
             var lowerScript = lowerHalf.GetComponent<ZombieHalf>();
             if (lowerScript != null && feetCarrier != null)
             {
@@ -165,6 +167,7 @@ public class ZombieBody : MonoBehaviour
             }
         }
 
+        // Spawn intestines
         if (intestinesPrefab != null && tearPoint != null)
         {
             GameObject intestine = Instantiate(intestinesPrefab, tearPoint.position, Quaternion.identity);
@@ -175,8 +178,7 @@ public class ZombieBody : MonoBehaviour
                 intestineRb.gravityScale = 5f;
                 intestineRb.mass = 1f;
                 intestineRb.linearDamping = 0.1f;
-                intestineRb.constraints = RigidbodyConstraints2D.FreezeRotation;
-                intestineRb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
+                intestineRb.constraints = RigidbodyConstraints2D.None;
                 intestineRb.AddForce(new Vector2(Random.Range(-2f, 2f), -10f), ForceMode2D.Impulse);
             }
         }
@@ -184,32 +186,25 @@ public class ZombieBody : MonoBehaviour
         Destroy(gameObject);
     }
 
-    public void Release(MonoBehaviour releaser)
-    {
-        if (releaser == headCarrier)
-        {
-            headCarrier = null;
-        }
-        else if (releaser == feetCarrier)
-        {
-            feetCarrier = null;
-        }
-
-        UpdateCarryState();
-    }
-
     private void DropBody()
     {
+        headCarrier = null;
+        feetCarrier = null;
+        isBeingCarried = false;
+
         if (rb != null)
         {
             rb.bodyType = RigidbodyType2D.Dynamic;
-            rb.constraints = RigidbodyConstraints2D.FreezeRotation;
-            rb.gravityScale = 1f;
+            rb.constraints = RigidbodyConstraints2D.FreezeRotation | RigidbodyConstraints2D.FreezePositionX;
         }
     }
 
-    public bool IsBeingCarried()
+    public void Release(MonoBehaviour carrier)
     {
-        return isBeingCarried;
+        if (carrier == headCarrier) headCarrier = null;
+        if (carrier == feetCarrier) feetCarrier = null;
+        UpdateCarryState();
     }
+
+    public bool IsBeingCarried() => isBeingCarried;
 }

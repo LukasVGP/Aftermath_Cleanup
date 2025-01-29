@@ -6,20 +6,19 @@ public class ZombieHalf : MonoBehaviour
     [SerializeField] private bool isUpperHalf;
     [SerializeField] private bool isLowerHalf;
     [SerializeField] private int silverCoinValue = 25;
-    [SerializeField] private float grabRadius = 0.5f;
     [SerializeField] private float carryHeight = 2f;
 
     private Rigidbody2D rb;
     private MonoBehaviour carrier;
     private bool isBeingCarried = false;
-    private bool hasBeenPickedUp = false;
     private ConveyorBelt conveyorBelt;
     private Quaternion defaultRotation;
+    private bool isOnConveyor = false;
 
     private void Start()
     {
         rb = GetComponent<Rigidbody2D>();
-        defaultRotation = transform.rotation;
+        defaultRotation = Quaternion.Euler(0, 0, -90f);
         InitializeRigidbody();
     }
 
@@ -46,6 +45,8 @@ public class ZombieHalf : MonoBehaviour
                 transform.SetPositionAndRotation(spawnPosition, defaultRotation);
                 rb.linearVelocity = Vector2.zero;
                 rb.bodyType = RigidbodyType2D.Kinematic;
+                isOnConveyor = true;
+                rb.constraints = RigidbodyConstraints2D.FreezeAll;
             }
         }
     }
@@ -77,6 +78,8 @@ public class ZombieHalf : MonoBehaviour
             rb.linearVelocity = Vector2.zero;
             Vector3 offset = Vector3.up * carryHeight;
             transform.position = carrier.transform.position + offset;
+            transform.rotation = defaultRotation;
+            isOnConveyor = false;
         }
     }
 
@@ -86,6 +89,7 @@ public class ZombieHalf : MonoBehaviour
         {
             Vector3 offset = Vector3.up * carryHeight;
             transform.position = carrier.transform.position + offset;
+            transform.rotation = defaultRotation;
             if ((carrier is RedPlayerController red && !red.WantsToGrab) ||
                 (carrier is BluePlayerController blue && !blue.WantsToGrab))
             {
@@ -100,15 +104,19 @@ public class ZombieHalf : MonoBehaviour
         isBeingCarried = false;
         if (rb != null)
         {
-            rb.bodyType = RigidbodyType2D.Dynamic;
-            rb.constraints = RigidbodyConstraints2D.FreezeRotation;
-            rb.linearVelocity = Vector2.zero;
-            rb.angularVelocity = 0f;
-            rb.gravityScale = 3f;
-            rb.mass = 2f;
-            rb.linearDamping = 0.2f;
-            rb.simulated = true;
-            rb.WakeUp();
+            if (!isOnConveyor)
+            {
+                rb.bodyType = RigidbodyType2D.Dynamic;
+                rb.constraints = RigidbodyConstraints2D.FreezeRotation;
+                rb.linearVelocity = Vector2.zero;
+                rb.angularVelocity = 0f;
+                rb.gravityScale = 3f;
+                rb.mass = 2f;
+                rb.linearDamping = 0.2f;
+                rb.simulated = true;
+                rb.WakeUp();
+            }
+            transform.rotation = defaultRotation;
         }
     }
 
