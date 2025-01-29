@@ -26,7 +26,7 @@ Transform:
   m_GameObject: {fileID: 1901938996352335206}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: 0.7085802, w: 0.7056303}
-  m_LocalPosition: {x: -0.014, y: -0.185, z: 0.07567693}
+  m_LocalPosition: {x: -0.014, y: -0.167, z: 0.07567693}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -96,7 +96,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5678100522719615996}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0.7085802, w: 0.7056303}
+  m_LocalRotation: {x: 0, y: 0, z: -0.70858, w: 0.70563054}
   m_LocalPosition: {x: -3.72, y: -3.43, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -250,7 +250,6 @@ MonoBehaviour:
   feetPosition: {fileID: 8446680838576954878}
   grabRadius: 0.5
   carryHeight: 0.3
-  spawnPoint: {fileID: 0}
   baseBodyLength: 2
   tearMultiplier: 2
   upperHalfPrefab: {fileID: 3012074242078335854, guid: e3372f44f280882408e3063b5901e21b, type: 3}
