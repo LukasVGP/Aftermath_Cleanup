@@ -5,14 +5,23 @@ public class GoldCoin : MonoBehaviour
     [SerializeField] private int coinValue = 100;
     private GameManager gameManager;
     private Rigidbody2D rb;
-    private CircleCollider2D coinCollider;
+    private CircleCollider2D triggerCollider;
+    private CircleCollider2D physicsCollider;
 
     void Start()
     {
         gameManager = Object.FindFirstObjectByType<GameManager>();
         rb = GetComponent<Rigidbody2D>();
-        coinCollider = GetComponent<CircleCollider2D>();
 
+        // Setup trigger collider for pickup detection
+        triggerCollider = gameObject.AddComponent<CircleCollider2D>();
+        triggerCollider.isTrigger = true;
+
+        // Setup physics collider for ground collision
+        physicsCollider = gameObject.AddComponent<CircleCollider2D>();
+        physicsCollider.isTrigger = false;
+
+        // Setup rigidbody
         rb.bodyType = RigidbodyType2D.Dynamic;
         rb.gravityScale = 1f;
         rb.constraints = RigidbodyConstraints2D.FreezeRotation;
@@ -20,13 +29,12 @@ public class GoldCoin : MonoBehaviour
         rb.mass = 1f;
         rb.linearDamping = 0f;
 
-        coinCollider.isTrigger = false;
         gameObject.tag = "Coin";
     }
 
-    private void OnCollisionEnter2D(Collision2D collision)
+    private void OnTriggerEnter2D(Collider2D other)
     {
-        if (collision.gameObject.CompareTag("RedPlayer") || collision.gameObject.CompareTag("BluePlayer"))
+        if (other.CompareTag("RedPlayer") || other.CompareTag("BluePlayer"))
         {
             Debug.Log($"Player collected gold coin worth {coinValue}!");
             if (gameManager != null)

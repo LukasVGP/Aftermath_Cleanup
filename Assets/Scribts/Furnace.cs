@@ -2,55 +2,72 @@ using UnityEngine;
 
 public class Furnace : MonoBehaviour
 {
+    [Header("Spawn Settings")]
     [SerializeField] private Transform coinSpawnPoint;
     [SerializeField] private GameObject goldCoinPrefab;
     [SerializeField] private GameObject silverCoinPrefab;
-    [SerializeField] private ConveyorBelt conveyorBelt;
+    [SerializeField] private float coinSpawnOffset = 0.5f;
+    [SerializeField] private float spawnHeightVariation = 0.2f;
+
+    [Header("Force Settings")]
+    [SerializeField] private float baseEjectionForce = 5f;
+    [SerializeField] private float randomForceVariation = 2f;
+
+    private int silverCoinsToSpawn = 0;
 
     private void OnTriggerEnter2D(Collider2D other)
     {
         if (other.TryGetComponent<ZombieBody>(out ZombieBody body))
         {
-            SpawnCoins(body.transform.position);
+            SpawnGoldCoins();
             Destroy(body.gameObject);
         }
         else if (other.TryGetComponent<ZombieHalf>(out ZombieHalf half))
         {
-            SpawnSilverCoin(half.transform.position, half.GetSilverCoinValue());
+            silverCoinsToSpawn++;
+            if (silverCoinsToSpawn >= 2)
+            {
+                SpawnSilverCoins();
+                silverCoinsToSpawn = 0;
+            }
             Destroy(half.gameObject);
         }
     }
 
-    private void SpawnCoins(Vector3 spawnPosition)
+    private void SpawnGoldCoins()
     {
-        // Spawn both gold and silver coins
-        GameObject goldCoin = Instantiate(goldCoinPrefab, coinSpawnPoint.position, Quaternion.identity);
-        GameObject silverCoin = Instantiate(silverCoinPrefab, coinSpawnPoint.position + Vector3.right, Quaternion.identity);
+        // Spawn two gold coins with offset
+        Vector3 leftPosition = coinSpawnPoint.position + Vector3.left * coinSpawnOffset;
+        Vector3 rightPosition = coinSpawnPoint.position + Vector3.right * coinSpawnOffset;
 
-        SetupCoinPhysics(goldCoin);
-        SetupCoinPhysics(silverCoin);
+        SpawnCoinWithForce(goldCoinPrefab, leftPosition);
+        SpawnCoinWithForce(goldCoinPrefab, rightPosition);
     }
 
-    private void SpawnSilverCoin(Vector3 spawnPosition, int value)
+    private void SpawnSilverCoins()
     {
-        GameObject coin = Instantiate(silverCoinPrefab, coinSpawnPoint.position, Quaternion.identity);
-        SetupCoinPhysics(coin);
+        // Spawn two silver coins with offset
+        Vector3 leftPosition = coinSpawnPoint.position + Vector3.left * coinSpawnOffset;
+        Vector3 rightPosition = coinSpawnPoint.position + Vector3.right * coinSpawnOffset;
+
+        SpawnCoinWithForce(silverCoinPrefab, leftPosition);
+        SpawnCoinWithForce(silverCoinPrefab, rightPosition);
     }
 
-    private void SetupCoinPhysics(GameObject coin)
+    private void SpawnCoinWithForce(GameObject coinPrefab, Vector3 position)
     {
+        // Add slight height variation
+        position.y += Random.Range(-spawnHeightVariation, spawnHeightVariation);
+
+        GameObject coin = Instantiate(coinPrefab, position, Quaternion.identity);
         Rigidbody2D rb = coin.GetComponent<Rigidbody2D>();
-        if (rb == null)
-        {
-            rb = coin.AddComponent<Rigidbody2D>();
-        }
-        rb.bodyType = RigidbodyType2D.Dynamic;
 
-        CircleCollider2D collider = coin.GetComponent<CircleCollider2D>();
-        if (collider == null)
+        if (rb != null)
         {
-            collider = coin.AddComponent<CircleCollider2D>();
+            // Calculate random ejection force
+            float randomForce = baseEjectionForce + Random.Range(-randomForceVariation, randomForceVariation);
+            Vector2 ejectionDirection = new Vector2(Random.Range(-0.5f, 0.5f), 1f).normalized;
+            rb.AddForce(ejectionDirection * randomForce, ForceMode2D.Impulse);
         }
-        collider.isTrigger = true;
     }
 }
