@@ -13,6 +13,7 @@ public class ZombieSpawner : MonoBehaviour
     [SerializeField] private float moveSpeed = 5f;
     [SerializeField] private float dropDelay = 0.5f;
     [SerializeField] private float stopDistance = 0.01f;
+    [SerializeField] private float zombieSpacing = 1.2f;
 
     [Header("Wave Settings")]
     [SerializeField] private int maxWaves = 5;
@@ -23,10 +24,12 @@ public class ZombieSpawner : MonoBehaviour
     private int zombiesInScene = 0;
     private int zombiePartsInScene = 0;
     private bool isMoving = false;
+    private float zombieWidth;
 
     private void Start()
     {
         transform.position = moveOutPoint.position;
+        zombieWidth = zombiePrefab.GetComponent<Collider2D>().bounds.size.x;
         StartNextWave();
     }
 
@@ -45,6 +48,14 @@ public class ZombieSpawner : MonoBehaviour
                 GameManager.Instance?.TriggerGameEnd();
             }
         }
+    }
+
+    private Vector3 CalculateSpawnPosition(int zombieIndex, int totalZombies)
+    {
+        float totalWidth = zombieWidth * zombieSpacing * (totalZombies - 1);
+        float startX = zombieDropPoint.position.x - (totalWidth / 2);
+        float xOffset = zombieWidth * zombieSpacing * zombieIndex;
+        return new Vector3(startX + xOffset, zombieDropPoint.position.y, zombieDropPoint.position.z);
     }
 
     private IEnumerator SpawnWave()
@@ -66,14 +77,15 @@ public class ZombieSpawner : MonoBehaviour
 
         for (int i = 0; i < currentWave; i++)
         {
+            Vector3 spawnPosition = CalculateSpawnPosition(i, currentWave);
             GameObject zombie = Instantiate(
                 zombiePrefab,
-                zombieDropPoint.position,
+                spawnPosition,
                 zombiePrefab.transform.rotation
             );
 
             zombiesInScene++;
-            Debug.Log($"Spawned zombie {i + 1} of {currentWave}");
+            Debug.Log($"Spawned zombie {i + 1} of {currentWave} at position {spawnPosition}");
             StartCoroutine(MonitorZombieDestruction(zombie));
             yield return new WaitForSeconds(dropDelay);
         }
