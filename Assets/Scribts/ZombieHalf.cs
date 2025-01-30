@@ -23,7 +23,6 @@ public class ZombieHalf : MonoBehaviour
         defaultRotation = Quaternion.Euler(0, 0, -90f);
         InitializeRigidbody();
 
-        // Ignore collisions between all zombie halves
         GameObject[] zombieHalves = GameObject.FindGameObjectsWithTag("ZombieHalf");
         foreach (GameObject other in zombieHalves)
         {
@@ -33,7 +32,6 @@ public class ZombieHalf : MonoBehaviour
             }
         }
 
-        // Ignore collisions with players from start
         var redPlayer = GameObject.FindGameObjectWithTag("RedPlayer");
         var bluePlayer = GameObject.FindGameObjectWithTag("BluePlayer");
 
@@ -79,20 +77,38 @@ public class ZombieHalf : MonoBehaviour
 
     private void OnTriggerStay2D(Collider2D other)
     {
-        if (!isBeingCarried)
+        // Only proceed if this zombie half isn't being carried AND isn't on conveyor
+        if (!isBeingCarried && !isOnConveyor)
         {
             RedPlayerController redPlayerController;
             BluePlayerController bluePlayerController;
 
-            if (other.TryGetComponent(out redPlayerController) && redPlayerController.WantsToGrab && !redPlayerController.IsCarryingAnything())
+            // For Red Player
+            if (other.TryGetComponent(out redPlayerController))
             {
-                SetCarrier(redPlayerController);
-                redPlayerController.GrabBody(null);
+                // Triple check to ensure player can pick up
+                if (redPlayerController.WantsToGrab &&
+                    !redPlayerController.IsCarryingAnything() &&
+                    !redPlayerController.IsCarryingZombieHalf() &&
+                    carrier == null)
+                {
+                    SetCarrier(redPlayerController);
+                    redPlayerController.GrabBody(null);
+                }
             }
-            if (other.TryGetComponent(out bluePlayerController) && bluePlayerController.WantsToGrab && !bluePlayerController.IsCarryingAnything())
+
+            // For Blue Player
+            if (other.TryGetComponent(out bluePlayerController))
             {
-                SetCarrier(bluePlayerController);
-                bluePlayerController.GrabBody(null);
+                // Triple check to ensure player can pick up
+                if (bluePlayerController.WantsToGrab &&
+                    !bluePlayerController.IsCarryingAnything() &&
+                    !bluePlayerController.IsCarryingZombieHalf() &&
+                    carrier == null)
+                {
+                    SetCarrier(bluePlayerController);
+                    bluePlayerController.GrabBody(null);
+                }
             }
         }
     }
@@ -166,7 +182,6 @@ public class ZombieHalf : MonoBehaviour
                 rb.simulated = true;
                 rb.WakeUp();
 
-                // Release slightly above current position
                 Vector3 releasePosition = transform.position;
                 releasePosition.y += 1f;
                 transform.position = releasePosition;

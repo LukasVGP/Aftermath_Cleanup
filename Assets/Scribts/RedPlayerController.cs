@@ -15,6 +15,7 @@ public class RedPlayerController : MonoBehaviour
     private void Start()
     {
         rb = GetComponent<Rigidbody2D>();
+        Debug.Log("Red Player initialized");
     }
 
     private void Update()
@@ -41,6 +42,7 @@ public class RedPlayerController : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.W) && isGrounded)
         {
             rb.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
+            Debug.Log("Red Player jumped");
         }
     }
 
@@ -49,6 +51,7 @@ public class RedPlayerController : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.Q))
         {
             WantsToGrab = true;
+            Debug.Log("Red Player wants to grab");
         }
         else if (Input.GetKeyUp(KeyCode.Q))
         {
@@ -58,21 +61,32 @@ public class RedPlayerController : MonoBehaviour
                 carriedBody.Release(this);
                 carriedBody = null;
             }
+            Debug.Log("Red Player released grab");
         }
     }
 
-    public void GrabBody(ZombieBody body)
+    private void OnTriggerEnter2D(Collider2D other)
     {
-        carriedBody = body;
-    }
+        if (other.CompareTag("Coin"))
+        {
+            Debug.Log($"Red Player collided with coin: {other.gameObject.name}");
+            int scoreValue = 0;
 
-    public bool IsCarryingZombieHalf() => isCarryingZombieHalf;
+            if (other.TryGetComponent<GoldCoin>(out GoldCoin goldCoin))
+            {
+                scoreValue = goldCoin.GetValue();
+            }
+            else if (other.TryGetComponent<SilverCoin>(out SilverCoin silverCoin))
+            {
+                scoreValue = silverCoin.GetValue();
+            }
 
-    public bool IsCarryingAnything() => isCarryingZombieHalf || carriedBody != null;
-
-    public void SetCarryingZombieHalf(bool carrying)
-    {
-        isCarryingZombieHalf = carrying;
+            if (scoreValue > 0)
+            {
+                GameManager.Instance?.AddScore(scoreValue);
+                Destroy(other.gameObject);
+            }
+        }
     }
 
     private void OnCollisionStay2D(Collision2D collision)
@@ -89,5 +103,20 @@ public class RedPlayerController : MonoBehaviour
         {
             isGrounded = false;
         }
+    }
+
+    public void GrabBody(ZombieBody body)
+    {
+        carriedBody = body;
+        Debug.Log("Red Player grabbed zombie body");
+    }
+
+    public bool IsCarryingZombieHalf() => isCarryingZombieHalf;
+    public bool IsCarryingAnything() => isCarryingZombieHalf || carriedBody != null;
+
+    public void SetCarryingZombieHalf(bool carrying)
+    {
+        isCarryingZombieHalf = carrying;
+        Debug.Log($"Red Player carrying zombie half: {carrying}");
     }
 }

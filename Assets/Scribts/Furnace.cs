@@ -11,7 +11,7 @@ public class Furnace : MonoBehaviour
     {
         if (other.TryGetComponent<ZombieBody>(out ZombieBody body))
         {
-            SpawnGoldCoin(body.transform.position);
+            SpawnCoins(body.transform.position);
             Destroy(body.gameObject);
         }
         else if (other.TryGetComponent<ZombieHalf>(out ZombieHalf half))
@@ -21,28 +21,36 @@ public class Furnace : MonoBehaviour
         }
     }
 
-    private void SpawnGoldCoin(Vector3 spawnPosition)
+    private void SpawnCoins(Vector3 spawnPosition)
     {
-        GameObject coin = Instantiate(goldCoinPrefab, spawnPosition, Quaternion.identity);
-        SetupCoinPhysics(coin);
+        // Spawn both gold and silver coins
+        GameObject goldCoin = Instantiate(goldCoinPrefab, coinSpawnPoint.position, Quaternion.identity);
+        GameObject silverCoin = Instantiate(silverCoinPrefab, coinSpawnPoint.position + Vector3.right, Quaternion.identity);
+
+        SetupCoinPhysics(goldCoin);
+        SetupCoinPhysics(silverCoin);
     }
 
     private void SpawnSilverCoin(Vector3 spawnPosition, int value)
     {
-        GameObject coin = Instantiate(silverCoinPrefab, spawnPosition, Quaternion.identity);
+        GameObject coin = Instantiate(silverCoinPrefab, coinSpawnPoint.position, Quaternion.identity);
         SetupCoinPhysics(coin);
     }
 
     private void SetupCoinPhysics(GameObject coin)
     {
-        if (!coin.GetComponent<Rigidbody2D>())
+        Rigidbody2D rb = coin.GetComponent<Rigidbody2D>();
+        if (rb == null)
         {
-            Rigidbody2D rb = coin.AddComponent<Rigidbody2D>();
-            rb.bodyType = RigidbodyType2D.Kinematic;
+            rb = coin.AddComponent<Rigidbody2D>();
         }
-        if (!coin.GetComponent<CircleCollider2D>())
+        rb.bodyType = RigidbodyType2D.Dynamic;
+
+        CircleCollider2D collider = coin.GetComponent<CircleCollider2D>();
+        if (collider == null)
         {
-            coin.AddComponent<CircleCollider2D>();
+            collider = coin.AddComponent<CircleCollider2D>();
         }
+        collider.isTrigger = true;
     }
 }

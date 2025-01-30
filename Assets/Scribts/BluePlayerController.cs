@@ -15,6 +15,7 @@ public class BluePlayerController : MonoBehaviour
     private void Start()
     {
         rb = GetComponent<Rigidbody2D>();
+        Debug.Log("Blue Player initialized");
     }
 
     private void Update()
@@ -41,6 +42,7 @@ public class BluePlayerController : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.Keypad8) && isGrounded)
         {
             rb.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
+            Debug.Log("Blue Player jumped");
         }
     }
 
@@ -49,6 +51,7 @@ public class BluePlayerController : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.Keypad7))
         {
             WantsToGrab = true;
+            Debug.Log("Blue Player wants to grab");
         }
         else if (Input.GetKeyUp(KeyCode.Keypad7))
         {
@@ -58,24 +61,32 @@ public class BluePlayerController : MonoBehaviour
                 carriedBody.Release(this);
                 carriedBody = null;
             }
+            Debug.Log("Blue Player released grab");
         }
     }
 
-    public bool IsCarryingAnything()
+    private void OnTriggerEnter2D(Collider2D other)
     {
-        return isCarryingZombieHalf || carriedBody != null;
-    }
+        if (other.CompareTag("Coin"))
+        {
+            Debug.Log($"Blue Player collided with coin: {other.gameObject.name}");
+            int scoreValue = 0;
 
-    public void GrabBody(ZombieBody body)
-    {
-        carriedBody = body;
-    }
+            if (other.TryGetComponent<GoldCoin>(out GoldCoin goldCoin))
+            {
+                scoreValue = goldCoin.GetValue();
+            }
+            else if (other.TryGetComponent<SilverCoin>(out SilverCoin silverCoin))
+            {
+                scoreValue = silverCoin.GetValue();
+            }
 
-    public bool IsCarryingZombieHalf() => isCarryingZombieHalf;
-
-    public void SetCarryingZombieHalf(bool carrying)
-    {
-        isCarryingZombieHalf = carrying;
+            if (scoreValue > 0)
+            {
+                GameManager.Instance?.AddScore(scoreValue);
+                Destroy(other.gameObject);
+            }
+        }
     }
 
     private void OnCollisionStay2D(Collision2D collision)
@@ -92,5 +103,20 @@ public class BluePlayerController : MonoBehaviour
         {
             isGrounded = false;
         }
+    }
+
+    public void GrabBody(ZombieBody body)
+    {
+        carriedBody = body;
+        Debug.Log("Blue Player grabbed zombie body");
+    }
+
+    public bool IsCarryingZombieHalf() => isCarryingZombieHalf;
+    public bool IsCarryingAnything() => isCarryingZombieHalf || carriedBody != null;
+
+    public void SetCarryingZombieHalf(bool carrying)
+    {
+        isCarryingZombieHalf = carrying;
+        Debug.Log($"Blue Player carrying zombie half: {carrying}");
     }
 }

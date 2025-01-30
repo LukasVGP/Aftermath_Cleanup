@@ -11,6 +11,7 @@ TagManager:
   - RedPlayer
   - BluePlayer
   - ZombieHalf
+  - Coin
   layers:
   - Default
   - TransparentFX

@@ -33,49 +33,31 @@ public class GameManager : MonoBehaviour
         currentScore = 0;
         totalZombiesProcessed = 0;
         UpdateUI();
+        Debug.Log("Game Started!");
     }
 
     public void AddScore(int points)
     {
         currentScore += points;
         UpdateUI();
+        Debug.Log($"Score added: {points}, Total score: {currentScore}");
     }
 
     private void UpdateUI()
     {
-        scoreUI?.UpdateScore(currentScore);
+        if (scoreUI != null)
+        {
+            scoreUI.UpdateScore(currentScore);
+        }
     }
 
     public void TriggerGameEnd()
     {
         isGameActive = false;
-        Debug.Log("Game Complete! Final Score: " + currentScore);
-        // Add additional game end logic here
+        Debug.Log($"Game Complete! Final Score: {currentScore}");
     }
 
-    public void NotifyZombieTornApart()
-    {
-        FindObjectOfType<ZombieSpawner>()?.OnZombieTornApart();
-    }
-
-    public void NotifyZombiePartDestroyed()
-    {
-        totalZombiesProcessed++;
-        FindObjectOfType<ZombieSpawner>()?.OnZombiePartDestroyed();
-    }
-
-    public bool IsGameActive()
-    {
-        return isGameActive;
-    }
-
-    public int GetCurrentScore()
-    {
-        return currentScore;
-    }
-
-    public int GetTotalZombiesProcessed()
-    {
-        return totalZombiesProcessed;
-    }
+    public bool IsGameActive() => isGameActive;
+    public int GetCurrentScore() => currentScore;
+    public int GetTotalZombiesProcessed() => totalZombiesProcessed;
 }

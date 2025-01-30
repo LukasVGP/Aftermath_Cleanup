@@ -2,33 +2,43 @@ using UnityEngine;
 
 public class SilverCoin : MonoBehaviour
 {
-    [SerializeField] private int coinValue = 25; // 1/4 of gold coin value
-    private bool canBePickedUp = false;
+    [SerializeField] private int coinValue = 25;
+    private GameManager gameManager;
     private Rigidbody2D rb;
+    private CircleCollider2D coinCollider;
 
     void Start()
     {
+        gameManager = Object.FindFirstObjectByType<GameManager>();
         rb = GetComponent<Rigidbody2D>();
-        if (rb == null)
-        {
-            rb = gameObject.AddComponent<Rigidbody2D>();
-        }
+        coinCollider = GetComponent<CircleCollider2D>();
+
         rb.bodyType = RigidbodyType2D.Dynamic;
+        rb.gravityScale = 1f;
+        rb.constraints = RigidbodyConstraints2D.FreezeRotation;
         rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
+        rb.mass = 1f;
+        rb.linearDamping = 0f;
+
+        coinCollider.isTrigger = false;
+        gameObject.tag = "Coin";
     }
 
     private void OnCollisionEnter2D(Collision2D collision)
     {
-        if (collision.gameObject.CompareTag("Ground"))
+        if (collision.gameObject.CompareTag("RedPlayer") || collision.gameObject.CompareTag("BluePlayer"))
         {
-            canBePickedUp = true;
+            Debug.Log($"Player collected silver coin worth {coinValue}!");
+            if (gameManager != null)
+            {
+                gameManager.AddScore(coinValue);
+                Destroy(gameObject);
+            }
         }
+    }
 
-        if (canBePickedUp && (collision.gameObject.CompareTag("RedPlayer") ||
-            collision.gameObject.CompareTag("BluePlayer")))
-        {
-            GameManager.Instance?.AddScore(coinValue);
-            Destroy(gameObject);
-        }
+    public int GetValue()
+    {
+        return coinValue;
     }
 }
