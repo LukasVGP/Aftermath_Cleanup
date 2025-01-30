@@ -1,24 +1,27 @@
 using UnityEngine;
-using UnityEngine.UI;
 using UnityEngine.SceneManagement;
+using TMPro;
 
 public class GameManager : MonoBehaviour
 {
     public static GameManager Instance { get; private set; }
 
     [Header("UI References")]
-    [SerializeField] private ScoreUI scoreUI;
-    [SerializeField] private GameObject gameOverPanel;
-    [SerializeField] private GameObject victoryPanel;
-    [SerializeField] private Text finalScoreText;
+    [SerializeField] private GameObject gameOverScreen;
+    [SerializeField] private GameObject winScreen;
+    [SerializeField] private TextMeshProUGUI scoreText;
+    [SerializeField] private TextMeshProUGUI finalScoreText;
+    [SerializeField] private TextMeshProUGUI levelText;
 
-    [Header("Game Settings")]
-    [SerializeField] private bool isGameActive = false;
-    [SerializeField] private float gameEndDelay = 2f;
-    [SerializeField] private int targetScore = 1000;
+    [Header("Level Settings")]
+    [SerializeField] private int currentLevel = 1;
+    [SerializeField] private int maxLevels = 3;
+    [SerializeField] private float baseZombiePoints = 100f;
 
     private int currentScore = 0;
-    private int totalZombiesProcessed = 0;
+    private int zombiesDisposed = 0;
+    private int requiredZombies = 0;
+    private bool isGameActive = true;
 
     private void Awake()
     {
@@ -26,7 +29,7 @@ public class GameManager : MonoBehaviour
         {
             Instance = this;
             DontDestroyOnLoad(gameObject);
-            SetGameResolution();
+            InitializeGame();
         }
         else
         {
@@ -34,106 +37,113 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    private void Start()
-    {
-        InitializeGame();
-    }
-
-    private void SetGameResolution()
-    {
-        Screen.SetResolution(1920, 1080, FullScreenMode.Windowed);
-    }
-
     private void InitializeGame()
     {
-        isGameActive = true;
         currentScore = 0;
-        totalZombiesProcessed = 0;
-
-        if (gameOverPanel) gameOverPanel.SetActive(false);
-        if (victoryPanel) victoryPanel.SetActive(false);
-
+        zombiesDisposed = 0;
+        isGameActive = true;
         UpdateUI();
-        Debug.Log("Game Started!");
+        Time.timeScale = 1f;
+    }
+
+    public void SetRequiredZombies(int amount)
+    {
+        requiredZombies = amount;
+        UpdateUI();
+    }
+
+    public void AddDisposedZombie(float pointMultiplier = 1.0f)
+    {
+        zombiesDisposed++;
+        AddScore(Mathf.RoundToInt(baseZombiePoints * pointMultiplier));
+        CheckLevelCompletion();
     }
 
     public void AddScore(int points)
     {
-        if (!isGameActive) return;
-
         currentScore += points;
         UpdateUI();
-        Debug.Log($"Score added: {points}, Total score: {currentScore}");
-
-        if (currentScore >= targetScore)
-        {
-            TriggerVictory();
-        }
     }
 
     private void UpdateUI()
     {
-        if (scoreUI != null)
+        if (scoreText != null)
         {
-            scoreUI.UpdateScore(currentScore);
+            scoreText.text = $"Score: {currentScore}";
+        }
+        if (levelText != null)
+        {
+            levelText.text = $"Level {currentLevel}";
         }
     }
 
-    public void TriggerGameEnd()
+    public void CheckLevelCompletion()
     {
-        isGameActive = false;
-        Debug.Log($"Game Over! Final Score: {currentScore}");
-
-        if (finalScoreText != null)
+        if (zombiesDisposed >= requiredZombies)
         {
-            finalScoreText.text = $"Final Score: {currentScore}";
-        }
-
-        if (gameOverPanel != null)
-        {
-            gameOverPanel.SetActive(true);
+            if (currentLevel >= maxLevels)
+            {
+                TriggerWin();
+            }
+            else
+            {
+                LoadNextLevel();
+            }
         }
     }
 
-    public void TriggerVictory()
+    public void TriggerGameOver()
     {
         isGameActive = false;
-        Debug.Log($"Victory! Final Score: {currentScore}");
+        Time.timeScale = 0f;
 
-        if (finalScoreText != null)
+        if (gameOverScreen != null)
         {
-            finalScoreText.text = $"Victory Score: {currentScore}";
+            gameOverScreen.SetActive(true);
+            if (finalScoreText != null)
+            {
+                finalScoreText.text = $"Final Score: {currentScore}";
+            }
         }
+    }
 
-        if (victoryPanel != null)
+    public void TriggerWin()
+    {
+        isGameActive = false;
+        Time.timeScale = 0f;
+
+        if (winScreen != null)
         {
-            victoryPanel.SetActive(true);
+            winScreen.SetActive(true);
+            if (finalScoreText != null)
+            {
+                finalScoreText.text = $"Final Score: {currentScore}";
+            }
         }
+    }
+
+    public void LoadNextLevel()
+    {
+        currentLevel++;
+        zombiesDisposed = 0;
+        SceneManager.LoadScene("Level_" + currentLevel);
     }
 
     public void RestartGame()
     {
-        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+        currentLevel = 1;
+        InitializeGame();
+        SceneManager.LoadScene("Level_1");
     }
 
-    public void QuitGame()
+    public void ReturnToMainMenu()
     {
-#if UNITY_EDITOR
-        UnityEditor.EditorApplication.isPlaying = false;
-#else
-            Application.Quit();
-#endif
+        SceneManager.LoadScene("MainMenu");
     }
 
     public bool IsGameActive() => isGameActive;
-
     public int GetCurrentScore() => currentScore;
-
-    public int GetTotalZombiesProcessed() => totalZombiesProcessed;
-
-    public void IncrementZombiesProcessed()
-    {
-        totalZombiesProcessed++;
-        Debug.Log($"Zombies Processed: {totalZombiesProcessed}");
-    }
+    public int GetCurrentLevel() => currentLevel;
+    public int GetZombiesDisposed() => zombiesDisposed;
+    public int GetRequiredZombies() => requiredZombies;
 }
