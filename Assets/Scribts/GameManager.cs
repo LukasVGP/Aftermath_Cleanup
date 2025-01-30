@@ -12,12 +12,15 @@ public class GameManager : MonoBehaviour
     [SerializeField] private TextMeshProUGUI scoreText;
     [SerializeField] private TextMeshProUGUI finalScoreText;
     [SerializeField] private TextMeshProUGUI levelText;
+    [SerializeField] private TextMeshProUGUI timerText;
 
-    [Header("Level Settings")]
+    [Header("Game Settings")]
+    [SerializeField] private LevelTimer levelTimer;
     [SerializeField] private int currentLevel = 1;
     [SerializeField] private int maxLevels = 3;
     [SerializeField] private float baseZombiePoints = 100f;
 
+    private float currentTime;
     private int currentScore = 0;
     private int zombiesDisposed = 0;
     private int requiredZombies = 0;
@@ -41,9 +44,34 @@ public class GameManager : MonoBehaviour
     {
         currentScore = 0;
         zombiesDisposed = 0;
+        currentTime = levelTimer.levelTime;
         isGameActive = true;
         UpdateUI();
         Time.timeScale = 1f;
+    }
+
+    private void Update()
+    {
+        if (isGameActive)
+        {
+            currentTime -= Time.deltaTime;
+            UpdateTimerDisplay();
+
+            if (currentTime <= 0)
+            {
+                TriggerGameOver();
+            }
+        }
+    }
+
+    private void UpdateTimerDisplay()
+    {
+        if (timerText != null)
+        {
+            int minutes = Mathf.FloorToInt(currentTime / 60);
+            int seconds = Mathf.FloorToInt(currentTime % 60);
+            timerText.text = string.Format("{0:00}:{1:00}", minutes, seconds);
+        }
     }
 
     public void SetRequiredZombies(int amount)
@@ -126,6 +154,7 @@ public class GameManager : MonoBehaviour
     {
         currentLevel++;
         zombiesDisposed = 0;
+        currentTime = levelTimer.levelTime;
         SceneManager.LoadScene("Level_" + currentLevel);
     }
 
@@ -146,4 +175,5 @@ public class GameManager : MonoBehaviour
     public int GetCurrentLevel() => currentLevel;
     public int GetZombiesDisposed() => zombiesDisposed;
     public int GetRequiredZombies() => requiredZombies;
+    public float GetCurrentTime() => currentTime;
 }

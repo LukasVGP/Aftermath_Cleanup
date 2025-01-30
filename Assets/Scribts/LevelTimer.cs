@@ -3,8 +3,9 @@ using TMPro;
 
 public class LevelTimer : MonoBehaviour
 {
-    [SerializeField] private float levelTime = 300f;
+    public float levelTime = 300f;
     [SerializeField] private TextMeshProUGUI timerText;
+
     private float currentTime;
     private bool isTimerRunning = true;
 
