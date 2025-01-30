@@ -172,8 +172,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   coinSpawnPoint: {fileID: 8176777267308527920}
   goldCoinPrefab: {fileID: 3519752949980215115, guid: fba2ffdd8b0f46148a39755286eb9869, type: 3}
-  silverCoinPrefab: {fileID: 0}
-  conveyorBelt: {fileID: 0}
+  silverCoinPrefab: {fileID: 3710549690954421700, guid: 92eb8fd68e6923849b4494d1d7ff08f9, type: 3}
+  coinSpawnOffset: 0.5
+  spawnHeightVariation: 0.2
+  baseEjectionForce: 5
+  randomForceVariation: 2
 --- !u!61 &6890833198181256062
 BoxCollider2D:
   m_ObjectHideFlags: 0

@@ -20,38 +20,32 @@ public class ZombieSpawner : MonoBehaviour
     [SerializeField] private float zombieSpacing = 1.2f;
 
     [Header("Wave Settings")]
-    [Range(1, 5)]
-    [SerializeField] private int spawnRounds = 3;
-    [Range(1, 5)]
-    [SerializeField] private int zombiesPerSpawn = 3;
-    [Range(1, 5)]
-    [SerializeField] private int activeSpawnPoints = 3;
+    [SerializeField] private int maxWaves = 5;
     [SerializeField] private float timeBetweenWaves = 2f;
     [SerializeField] private float pauseAtMoveInPoint = 0.5f;
+    [SerializeField] private float spawnReturnInterval = 10f;
 
-    private int currentRound = 0;
-    private int totalZombies;
+    private int currentWave = 0;
     private int zombiesInScene = 0;
     private int zombiePartsInScene = 0;
     private bool isMoving = false;
     private float zombieWidth;
     private Transform[] spawnPoints;
+    private float nextSpawnTime;
 
     private void Start()
     {
-        totalZombies = spawnRounds * zombiesPerSpawn;
-        GameManager.Instance?.SetRequiredZombies(totalZombies);
-
         transform.position = moveOutPoint.position;
         zombieDropPoint.position = moveOutPoint.position;
+        nextSpawnTime = Time.time + spawnReturnInterval;
 
-        spawnPoints = new Transform[activeSpawnPoints];
-        spawnPoints[0] = moveInPoint;
-
-        if (activeSpawnPoints > 1) spawnPoints[1] = spawnPoint2;
-        if (activeSpawnPoints > 2) spawnPoints[2] = spawnPoint3;
-        if (activeSpawnPoints > 3) spawnPoints[3] = spawnPoint4;
-        if (activeSpawnPoints > 4) spawnPoints[4] = spawnPoint5;
+        spawnPoints = new Transform[] {
+            moveInPoint,
+            spawnPoint2,
+            spawnPoint3,
+            spawnPoint4,
+            spawnPoint5
+        };
 
         if (zombiePrefab.GetComponent<Collider2D>() != null)
         {
@@ -62,19 +56,31 @@ public class ZombieSpawner : MonoBehaviour
             zombieWidth = 1f;
             Debug.LogWarning("No Collider2D found on zombie prefab, using default width of 1");
         }
-
-        StartNextRound();
+        StartNextWave();
     }
 
-    private void StartNextRound()
+    private void Update()
+    {
+        if (Time.time >= nextSpawnTime && !isMoving && zombiesInScene == 0 && zombiePartsInScene == 0)
+        {
+            nextSpawnTime = Time.time + spawnReturnInterval;
+            StartNextWave();
+        }
+    }
+
+    private void StartNextWave()
     {
         if (!isMoving && zombiesInScene == 0 && zombiePartsInScene == 0)
         {
-            currentRound++;
-            if (currentRound <= spawnRounds)
+            currentWave++;
+            if (currentWave <= maxWaves)
             {
-                Debug.Log($"Starting Round {currentRound}");
+                Debug.Log($"Starting Wave {currentWave}");
                 StartCoroutine(SpawnWave());
+            }
+            else
+            {
+                GameManager.Instance?.TriggerWin();
             }
         }
     }
@@ -106,8 +112,8 @@ public class ZombieSpawner : MonoBehaviour
             float spacingDistance = zombieWidth * zombieSpacing;
             Vector3 currentSpawnPosition = targetPosition;
 
-            int zombiesToSpawn = zombiesPerSpawn / activeSpawnPoints;
-            if (spawnPointIndex < zombiesPerSpawn % activeSpawnPoints) zombiesToSpawn++;
+            int zombiesToSpawn = Mathf.CeilToInt(currentWave / spawnPoints.Length);
+            if (spawnPointIndex < currentWave % spawnPoints.Length) zombiesToSpawn++;
 
             for (int i = 0; i < zombiesToSpawn; i++)
             {
@@ -151,7 +157,7 @@ public class ZombieSpawner : MonoBehaviour
         if (zombiesInScene == 0 && zombiePartsInScene == 0)
         {
             yield return new WaitForSeconds(timeBetweenWaves);
-            StartNextRound();
+            StartNextWave();
         }
     }
 
@@ -167,11 +173,10 @@ public class ZombieSpawner : MonoBehaviour
     public void OnZombieDestroyed()
     {
         zombiesInScene--;
-        GameManager.Instance?.AddDisposedZombie();
-
+        Debug.Log($"Zombie destroyed. Remaining zombies: {zombiesInScene}");
         if (zombiesInScene == 0 && zombiePartsInScene == 0 && !isMoving)
         {
-            StartCoroutine(DelayedNextRound());
+            StartCoroutine(DelayedNextWave());
         }
     }
 
@@ -179,22 +184,22 @@ public class ZombieSpawner : MonoBehaviour
     {
         zombiesInScene--;
         zombiePartsInScene += 2;
+        Debug.Log($"Zombie torn apart. Parts in scene: {zombiePartsInScene}");
     }
 
     public void OnZombiePartDestroyed()
     {
         zombiePartsInScene--;
-        GameManager.Instance?.AddDisposedZombie(0.5f);
-
+        Debug.Log($"Zombie part destroyed. Remaining parts: {zombiePartsInScene}");
         if (zombiesInScene == 0 && zombiePartsInScene == 0 && !isMoving)
         {
-            StartCoroutine(DelayedNextRound());
+            StartCoroutine(DelayedNextWave());
         }
     }
 
-    private IEnumerator DelayedNextRound()
+    private IEnumerator DelayedNextWave()
     {
         yield return new WaitForSeconds(timeBetweenWaves);
-        StartNextRound();
+        StartNextWave();
     }
 }
