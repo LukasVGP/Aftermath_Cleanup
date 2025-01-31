@@ -44,7 +44,7 @@ public class GameManager : MonoBehaviour
     {
         currentScore = 0;
         zombiesDisposed = 0;
-        currentTime = levelTimer.levelTime;
+        currentTime = levelTimer != null ? levelTimer.levelTime : 300f;
         isGameActive = true;
         UpdateUI();
         Time.timeScale = 1f;
@@ -154,7 +154,7 @@ public class GameManager : MonoBehaviour
     {
         currentLevel++;
         zombiesDisposed = 0;
-        currentTime = levelTimer.levelTime;
+        currentTime = levelTimer != null ? levelTimer.levelTime : 300f;
         SceneManager.LoadScene("Level_" + currentLevel);
     }
 
