@@ -5,6 +5,9 @@ public class RedPlayerController : MonoBehaviour
     [Header("Movement Settings")]
     [SerializeField] private float moveSpeed = 5f;
     [SerializeField] private float jumpForce = 10f;
+    [SerializeField] private Transform groundCheck;
+    [SerializeField] private float groundCheckRadius = 0.2f;
+    [SerializeField] private LayerMask groundLayer;
 
     private Rigidbody2D rb;
     private bool isGrounded;
@@ -15,11 +18,20 @@ public class RedPlayerController : MonoBehaviour
     private void Start()
     {
         rb = GetComponent<Rigidbody2D>();
+
+        if (groundCheck == null)
+        {
+            GameObject check = new GameObject("GroundCheck");
+            check.transform.parent = transform;
+            check.transform.localPosition = new Vector3(0, -0.5f, 0);
+            groundCheck = check.transform;
+        }
         Debug.Log("Red Player initialized");
     }
 
     private void Update()
     {
+        CheckGrounded();
         HandleGrabbing();
         HandleJump();
     }
@@ -27,6 +39,11 @@ public class RedPlayerController : MonoBehaviour
     private void FixedUpdate()
     {
         HandleMovement();
+    }
+
+    private void CheckGrounded()
+    {
+        isGrounded = Physics2D.OverlapCircle(groundCheck.position, groundCheckRadius, groundLayer);
     }
 
     private void HandleMovement()
@@ -39,9 +56,9 @@ public class RedPlayerController : MonoBehaviour
 
     private void HandleJump()
     {
-        if (Input.GetKeyDown(KeyCode.W) && isGrounded)
+        if (Input.GetKeyDown(KeyCode.Space) && isGrounded)
         {
-            rb.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
+            rb.linearVelocity = new Vector2(rb.linearVelocity.x, jumpForce);
             Debug.Log("Red Player jumped");
         }
     }
@@ -71,7 +88,6 @@ public class RedPlayerController : MonoBehaviour
         {
             Debug.Log($"Red Player collided with coin: {other.gameObject.name}");
             int scoreValue = 0;
-
             if (other.TryGetComponent<GoldCoin>(out GoldCoin goldCoin))
             {
                 scoreValue = goldCoin.GetValue();
@@ -80,28 +96,11 @@ public class RedPlayerController : MonoBehaviour
             {
                 scoreValue = silverCoin.GetValue();
             }
-
             if (scoreValue > 0)
             {
                 GameManager.Instance?.AddScore(scoreValue);
                 Destroy(other.gameObject);
             }
-        }
-    }
-
-    private void OnCollisionStay2D(Collision2D collision)
-    {
-        if (collision.gameObject.CompareTag("Ground"))
-        {
-            isGrounded = true;
-        }
-    }
-
-    private void OnCollisionExit2D(Collision2D collision)
-    {
-        if (collision.gameObject.CompareTag("Ground"))
-        {
-            isGrounded = false;
         }
     }
 
@@ -112,6 +111,7 @@ public class RedPlayerController : MonoBehaviour
     }
 
     public bool IsCarryingZombieHalf() => isCarryingZombieHalf;
+
     public bool IsCarryingAnything() => isCarryingZombieHalf || carriedBody != null;
 
     public void SetCarryingZombieHalf(bool carrying)
