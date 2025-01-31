@@ -19,12 +19,15 @@ public class GameManager : MonoBehaviour
     [SerializeField] private int currentLevel = 1;
     [SerializeField] private int maxLevels = 3;
     [SerializeField] private float baseZombiePoints = 100f;
+    [SerializeField] private int requiredWaves = 3;
 
     private float currentTime;
     private int currentScore = 0;
     private int zombiesDisposed = 0;
     private int requiredZombies = 0;
     private bool isGameActive = true;
+    private int completedWaves = 0;
+    private bool canExit = false;
 
     private void Awake()
     {
@@ -44,6 +47,8 @@ public class GameManager : MonoBehaviour
     {
         currentScore = 0;
         zombiesDisposed = 0;
+        completedWaves = 0;
+        canExit = false;
         currentTime = levelTimer != null ? levelTimer.levelTime : 300f;
         isGameActive = true;
         UpdateUI();
@@ -105,18 +110,25 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    public void WaveCompleted()
+    {
+        completedWaves++;
+        if (completedWaves >= requiredWaves)
+        {
+            canExit = true;
+        }
+    }
+
+    public bool CanExitLevel()
+    {
+        return canExit && zombiesDisposed >= requiredZombies;
+    }
+
     public void CheckLevelCompletion()
     {
-        if (zombiesDisposed >= requiredZombies)
+        if (zombiesDisposed >= requiredZombies && completedWaves >= requiredWaves)
         {
-            if (currentLevel >= maxLevels)
-            {
-                TriggerWin();
-            }
-            else
-            {
-                LoadNextLevel();
-            }
+            canExit = true;
         }
     }
 
@@ -154,6 +166,8 @@ public class GameManager : MonoBehaviour
     {
         currentLevel++;
         zombiesDisposed = 0;
+        completedWaves = 0;
+        canExit = false;
         currentTime = levelTimer != null ? levelTimer.levelTime : 300f;
         SceneManager.LoadScene("Level_" + currentLevel);
     }
@@ -176,4 +190,8 @@ public class GameManager : MonoBehaviour
     public int GetZombiesDisposed() => zombiesDisposed;
     public int GetRequiredZombies() => requiredZombies;
     public float GetCurrentTime() => currentTime;
+    public int GetRequiredWaves() => requiredWaves;
+    public int GetCompletedWaves() => completedWaves;
+    public int GetMaxLevels() => maxLevels;
+
 }
