@@ -812,6 +812,8 @@ MonoBehaviour:
   maxLevels: 3
   baseZombiePoints: 100
   requiredWaves: 3
+  mainMenuSceneName: MainMenu
+  menuTransitionDelay: 3
 --- !u!4 &55738436
 Transform:
   m_ObjectHideFlags: 0
@@ -1001,7 +1003,7 @@ GameObject:
   - component: {fileID: 64148983}
   m_Layer: 0
   m_Name: Floor
-  m_TagString: Untagged
+  m_TagString: Ground
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -6600,6 +6602,8 @@ MonoBehaviour:
   maxLevels: 1
   baseZombiePoints: 100
   requiredWaves: 1
+  mainMenuSceneName: MainMenu
+  menuTransitionDelay: 3
 --- !u!4 &603033523
 Transform:
   m_ObjectHideFlags: 0

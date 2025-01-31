@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using TMPro;
+using System.Collections;
 
 public class GameManager : MonoBehaviour
 {
@@ -20,6 +21,8 @@ public class GameManager : MonoBehaviour
     [SerializeField] private int maxLevels = 3;
     [SerializeField] private float baseZombiePoints = 100f;
     [SerializeField] private int requiredWaves = 3;
+    [SerializeField] private string mainMenuSceneName = "MainMenu";
+    [SerializeField] private float menuTransitionDelay = 3f;
 
     private float currentTime;
     private int currentScore = 0;
@@ -61,7 +64,6 @@ public class GameManager : MonoBehaviour
         {
             currentTime -= Time.deltaTime;
             UpdateTimerDisplay();
-
             if (currentTime <= 0)
             {
                 TriggerGameOver();
@@ -116,15 +118,11 @@ public class GameManager : MonoBehaviour
         if (completedWaves >= requiredWaves)
         {
             canExit = true;
+            CheckLevelCompletion();
         }
     }
 
-    public bool CanExitLevel()
-    {
-        return canExit && zombiesDisposed >= requiredZombies;
-    }
-
-    public void CheckLevelCompletion()
+    private void CheckLevelCompletion()
     {
         if (zombiesDisposed >= requiredZombies && completedWaves >= requiredWaves)
         {
@@ -136,7 +134,6 @@ public class GameManager : MonoBehaviour
     {
         isGameActive = false;
         Time.timeScale = 0f;
-
         if (gameOverScreen != null)
         {
             gameOverScreen.SetActive(true);
@@ -145,13 +142,13 @@ public class GameManager : MonoBehaviour
                 finalScoreText.text = $"Final Score: {currentScore}";
             }
         }
+        StartCoroutine(ReturnToMenuAfterDelay());
     }
 
     public void TriggerWin()
     {
         isGameActive = false;
         Time.timeScale = 0f;
-
         if (winScreen != null)
         {
             winScreen.SetActive(true);
@@ -160,6 +157,13 @@ public class GameManager : MonoBehaviour
                 finalScoreText.text = $"Final Score: {currentScore}";
             }
         }
+        StartCoroutine(ReturnToMenuAfterDelay());
+    }
+
+    private IEnumerator ReturnToMenuAfterDelay()
+    {
+        yield return new WaitForSecondsRealtime(menuTransitionDelay);
+        SceneManager.LoadScene(mainMenuSceneName);
     }
 
     public void LoadNextLevel()
@@ -181,9 +185,10 @@ public class GameManager : MonoBehaviour
 
     public void ReturnToMainMenu()
     {
-        SceneManager.LoadScene("MainMenu");
+        SceneManager.LoadScene(mainMenuSceneName);
     }
 
+    // Getter methods
     public bool IsGameActive() => isGameActive;
     public int GetCurrentScore() => currentScore;
     public int GetCurrentLevel() => currentLevel;
@@ -193,5 +198,5 @@ public class GameManager : MonoBehaviour
     public int GetRequiredWaves() => requiredWaves;
     public int GetCompletedWaves() => completedWaves;
     public int GetMaxLevels() => maxLevels;
-
+    public bool CanExitLevel() => canExit;
 }
