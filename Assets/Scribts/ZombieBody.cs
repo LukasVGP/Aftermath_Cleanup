@@ -24,6 +24,8 @@ public class ZombieBody : MonoBehaviour
     private Rigidbody2D rb;
     private Quaternion defaultRotation;
     private ConveyorBelt conveyorBelt;
+    private bool isOnFurnaceConveyor = false;
+    private FurnaceLid furnaceLid;
 
     private void Start()
     {
@@ -36,6 +38,9 @@ public class ZombieBody : MonoBehaviour
         rb.linearDamping = 10f;
         rb.interpolation = RigidbodyInterpolation2D.Interpolate;
         gameObject.layer = 8;
+
+        // Find the furnace lid in the scene
+        furnaceLid = FindAnyObjectByType<FurnaceLid>();
     }
 
     private void OnCollisionEnter2D(Collision2D collision)
@@ -49,6 +54,34 @@ public class ZombieBody : MonoBehaviour
                 transform.SetPositionAndRotation(spawnPosition, defaultRotation);
                 rb.linearVelocity = Vector2.zero;
                 rb.bodyType = RigidbodyType2D.Kinematic;
+                isOnFurnaceConveyor = true;
+            }
+        }
+
+        // Check if this is the furnace lid and it's closed
+        if (collision.gameObject.GetComponent<FurnaceLid>() != null)
+        {
+            FurnaceLid lid = collision.gameObject.GetComponent<FurnaceLid>();
+            if (!lid.CanZombiesPassThrough())
+            {
+                // Bounce back or stop
+                rb.linearVelocity = new Vector2(-rb.linearVelocity.x * 0.5f, rb.linearVelocity.y);
+                Debug.Log("Zombie body hit closed furnace lid");
+            }
+        }
+    }
+
+    private void OnTriggerEnter2D(Collider2D other)
+    {
+        // Check if we've entered the furnace
+        if (other.CompareTag("Furnace") && isOnFurnaceConveyor)
+        {
+            // Only allow entry if the lid is open
+            if (furnaceLid != null && furnaceLid.CanZombiesPassThrough())
+            {
+                Debug.Log("Zombie body entered furnace");
+                GameManager.Instance?.AddDisposedZombie();
+                Destroy(gameObject);
             }
         }
     }
@@ -76,6 +109,7 @@ public class ZombieBody : MonoBehaviour
             if (player is RedPlayerController redPlayer) redPlayer.GrabBody(this);
             if (player is BluePlayerController bluePlayer) bluePlayer.GrabBody(this);
         }
+
         if (distanceToFeet <= grabRadius && feetCarrier == null)
         {
             feetCarrier = player;
@@ -97,6 +131,7 @@ public class ZombieBody : MonoBehaviour
             rb.constraints = RigidbodyConstraints2D.FreezeRotation;
             rb.linearVelocity = Vector2.zero;
             rb.angularVelocity = 0f;
+            isOnFurnaceConveyor = false;
 
             if (strainMeter != null)
             {
@@ -141,6 +176,7 @@ public class ZombieBody : MonoBehaviour
     private void TearApart()
     {
         if (hasTornApart || !enabled) return;
+
         hasTornApart = true;
 
         // Spawn upper half with carrier
@@ -149,9 +185,24 @@ public class ZombieBody : MonoBehaviour
             Quaternion upperRotation = Quaternion.Euler(0, 0, -90f);
             GameObject upperHalf = Instantiate(upperHalfPrefab, headPosition.position + Vector3.up * 2f, upperRotation);
             var upperScript = upperHalf.GetComponent<ZombieHalf>();
+
             if (upperScript != null && headCarrier != null)
             {
-                upperScript.SetCarrier(headCarrier);
+                // Instead of calling SetCarrier, manually set up the carrier relationship
+                if (headCarrier is RedPlayerController redPlayer)
+                {
+                    redPlayer.SetCarryingZombieHalf(true);
+                    redPlayer.GrabBody(null);
+                }
+                else if (headCarrier is BluePlayerController bluePlayer)
+                {
+                    bluePlayer.SetCarryingZombieHalf(true);
+                    bluePlayer.GrabBody(null);
+                }
+
+                // Trigger the OnTriggerStay2D in the ZombieHalf to pick up the object
+                // This is a workaround since we can't directly call SetCarrier
+                upperHalf.transform.position = headCarrier.transform.position + Vector3.up * 2f;
             }
         }
 
@@ -161,9 +212,24 @@ public class ZombieBody : MonoBehaviour
             Quaternion lowerRotation = Quaternion.Euler(0, 0, -90f);
             GameObject lowerHalf = Instantiate(lowerHalfPrefab, feetPosition.position + Vector3.up * 2f, lowerRotation);
             var lowerScript = lowerHalf.GetComponent<ZombieHalf>();
+
             if (lowerScript != null && feetCarrier != null)
             {
-                lowerScript.SetCarrier(feetCarrier);
+                // Instead of calling SetCarrier, manually set up the carrier relationship
+                if (feetCarrier is RedPlayerController redPlayer)
+                {
+                    redPlayer.SetCarryingZombieHalf(true);
+                    redPlayer.GrabBody(null);
+                }
+                else if (feetCarrier is BluePlayerController bluePlayer)
+                {
+                    bluePlayer.SetCarryingZombieHalf(true);
+                    bluePlayer.GrabBody(null);
+                }
+
+                // Trigger the OnTriggerStay2D in the ZombieHalf to pick up the object
+                // This is a workaround since we can't directly call SetCarrier
+                lowerHalf.transform.position = feetCarrier.transform.position + Vector3.up * 2f;
             }
         }
 
@@ -191,7 +257,6 @@ public class ZombieBody : MonoBehaviour
         headCarrier = null;
         feetCarrier = null;
         isBeingCarried = false;
-
         if (rb != null)
         {
             rb.bodyType = RigidbodyType2D.Dynamic;

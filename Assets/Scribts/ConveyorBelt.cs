@@ -7,13 +7,16 @@ public class ConveyorBelt : MonoBehaviour
     [SerializeField] private Transform endPoint;
     [SerializeField] private float beltSpeed = 2f;
     [SerializeField] private Vector2 moveDirection = Vector2.right;
+
     private bool isActive = false;
     private Animator animator;
     private int currentSpawnPoint = 1;
+    private FurnaceLid furnaceLid;
 
     void Start()
     {
         animator = GetComponent<Animator>();
+        furnaceLid = FindAnyObjectByType<FurnaceLid>();
     }
 
     public Transform GetSpawnPoint()
@@ -53,18 +56,49 @@ public class ConveyorBelt : MonoBehaviour
             bool isZombieHalf = item.TryGetComponent(out ZombieHalf zombieHalf);
             bool isGoldCoin = item.TryGetComponent(out GoldCoin goldCoin);
 
-            if ((isZombieBody && !zombieBody.IsBeingCarried()) ||
-                (isZombieHalf && !zombieHalf.IsBeingCarried()) ||
-                isGoldCoin)
+            // Check if the item can be moved
+            bool canMove = false;
+
+            if (isZombieBody && !zombieBody.IsBeingCarried())
             {
+                canMove = true;
+            }
+            else if (isZombieHalf && !zombieHalf.IsBeingCarried())
+            {
+                canMove = true;
+            }
+            else if (isGoldCoin)
+            {
+                canMove = true;
+            }
+
+            // If the item can be moved and we're approaching the furnace, check if lid is open
+            if (canMove)
+            {
+                // Check if we're near the furnace and the lid is closed
+                bool nearFurnace = Vector2.Distance(item.transform.position, endPoint.position) < 1.0f;
+                bool lidClosed = furnaceLid != null && !furnaceLid.CanZombiesPassThrough();
+
+                if (nearFurnace && lidClosed && (isZombieBody || isZombieHalf))
+                {
+                    // Don't move zombies if the furnace lid is closed
+                    continue;
+                }
+
+                // Move the item
                 Vector3 newPosition = item.transform.position + (Vector3)(moveDirection.normalized * beltSpeed * Time.deltaTime);
                 item.transform.position = newPosition;
 
+                // Check if the item has reached the end point
                 if (Vector2.Distance(item.transform.position, endPoint.position) < 0.1f)
                 {
                     if (isZombieBody || isZombieHalf)
                     {
-                        Destroy(item.gameObject);
+                        // Only destroy if the furnace lid is open
+                        if (furnaceLid == null || furnaceLid.CanZombiesPassThrough())
+                        {
+                            Destroy(item.gameObject);
+                        }
                     }
                     if (isGoldCoin)
                     {

@@ -12,6 +12,7 @@ TagManager:
   - BluePlayer
   - ZombieHalf
   - Coin
+  - Furnace
   layers:
   - Default
   - TransparentFX

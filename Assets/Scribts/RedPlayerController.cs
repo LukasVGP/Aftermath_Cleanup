@@ -15,10 +15,13 @@ public class RedPlayerController : MonoBehaviour
     public bool WantsToGrab { get; private set; }
     private ZombieBody carriedBody;
 
+    // Static input tracking for both players
+    public static bool leftKeyPressed = false;
+    public static bool rightKeyPressed = false;
+
     private void Start()
     {
         rb = GetComponent<Rigidbody2D>();
-
         if (groundCheck == null)
         {
             GameObject check = new GameObject("GroundCheck");
@@ -34,6 +37,12 @@ public class RedPlayerController : MonoBehaviour
         CheckGrounded();
         HandleGrabbing();
         HandleJump();
+
+        // Track WASD inputs for red player
+        if (Input.GetKeyDown(KeyCode.A)) leftKeyPressed = true;
+        if (Input.GetKeyUp(KeyCode.A)) leftKeyPressed = false;
+        if (Input.GetKeyDown(KeyCode.D)) rightKeyPressed = true;
+        if (Input.GetKeyUp(KeyCode.D)) rightKeyPressed = false;
     }
 
     private void FixedUpdate()
@@ -49,9 +58,15 @@ public class RedPlayerController : MonoBehaviour
     private void HandleMovement()
     {
         float horizontalMovement = 0f;
-        if (Input.GetKey(KeyCode.A)) horizontalMovement -= 1f;
-        if (Input.GetKey(KeyCode.D)) horizontalMovement += 1f;
-        rb.linearVelocity = new Vector2(horizontalMovement * moveSpeed, rb.linearVelocity.y);
+        if (leftKeyPressed) horizontalMovement -= 1f;
+        if (rightKeyPressed) horizontalMovement += 1f;
+
+        // Use MovePosition for more reliable movement
+        Vector2 targetPosition = rb.position + new Vector2(horizontalMovement * moveSpeed * Time.fixedDeltaTime, 0);
+        rb.MovePosition(targetPosition);
+
+        // Keep vertical velocity for jumping
+        rb.linearVelocity = new Vector2(0, rb.linearVelocity.y);
     }
 
     private void HandleJump()

@@ -17,7 +17,6 @@ public class ZombieSpawner : MonoBehaviour
     [SerializeField] private float moveSpeed = 5f;
     [SerializeField] private float dropDelay = 0.5f;
     [SerializeField] private float stopDistance = 0.01f;
-    [SerializeField] private float zombieSpacing = 1.2f;
     [SerializeField] private float pauseAtMoveInPoint = 0.5f;
     [SerializeField] private float spawnReturnInterval = 10f;
 
@@ -90,12 +89,21 @@ public class ZombieSpawner : MonoBehaviour
     {
         isMoving = true;
 
-        for (int spawnPointIndex = 0; spawnPointIndex < spawnPoints.Length; spawnPointIndex++)
+        // Determine how many spawn points to use based on current wave
+        int spawnPointsToUse = Mathf.Min(currentWave, spawnPoints.Length);
+
+        Debug.Log($"Wave {currentWave}: Using {spawnPointsToUse} spawn points");
+
+        // For each active spawn point in this wave
+        for (int spawnPointIndex = 0; spawnPointIndex < spawnPointsToUse; spawnPointIndex++)
         {
             Transform currentSpawnPoint = spawnPoints[spawnPointIndex];
             Vector3 targetPosition = currentSpawnPoint.position;
             zombieDropPoint.position = targetPosition;
 
+            Debug.Log($"Moving to spawn point {spawnPointIndex + 1}");
+
+            // Move to the spawn point
             while ((targetPosition - transform.position).magnitude > stopDistance)
             {
                 transform.position = Vector3.MoveTowards(
@@ -109,40 +117,19 @@ public class ZombieSpawner : MonoBehaviour
             transform.position = targetPosition;
             yield return new WaitForSeconds(pauseAtMoveInPoint);
 
-            Vector3 moveDirection = (moveOutPoint.position - targetPosition).normalized;
-            float spacingDistance = zombieWidth * zombieSpacing;
-            Vector3 currentSpawnPosition = targetPosition;
+            // Spawn a single zombie at this spawn point
+            GameObject zombie = Instantiate(zombiePrefab, zombieDropPoint.position, zombiePrefab.transform.rotation);
+            zombiesInScene++;
+            StartCoroutine(MonitorZombieDestruction(zombie));
 
-            int zombiesToSpawn = Mathf.CeilToInt(currentWave / spawnPoints.Length);
-            if (spawnPointIndex < currentWave % spawnPoints.Length) zombiesToSpawn++;
+            Debug.Log($"Spawned zombie at point {spawnPointIndex + 1}, total zombies: {zombiesInScene}");
 
-            for (int i = 0; i < zombiesToSpawn; i++)
-            {
-                zombieDropPoint.position = currentSpawnPosition;
-                GameObject zombie = Instantiate(zombiePrefab, zombieDropPoint.position, zombiePrefab.transform.rotation);
-                zombiesInScene++;
-                StartCoroutine(MonitorZombieDestruction(zombie));
-                yield return new WaitForSeconds(dropDelay);
-
-                if (i < zombiesToSpawn - 1)
-                {
-                    Vector3 nextPosition = new Vector3(
-                        currentSpawnPosition.x + (moveDirection.x * spacingDistance),
-                        currentSpawnPoint.position.y,
-                        currentSpawnPosition.z
-                    );
-                    currentSpawnPosition = nextPosition;
-
-                    while ((nextPosition - transform.position).magnitude > stopDistance)
-                    {
-                        transform.position = Vector3.MoveTowards(transform.position, nextPosition, moveSpeed * Time.deltaTime);
-                        zombieDropPoint.position = transform.position;
-                        yield return null;
-                    }
-                }
-            }
+            yield return new WaitForSeconds(dropDelay);
         }
 
+        Debug.Log("Moving back to exit point");
+
+        // Move back to the exit point
         while ((moveOutPoint.position - transform.position).magnitude > stopDistance)
         {
             transform.position = Vector3.MoveTowards(transform.position, moveOutPoint.position, moveSpeed * Time.deltaTime);
@@ -153,6 +140,7 @@ public class ZombieSpawner : MonoBehaviour
         transform.position = moveOutPoint.position;
         zombieDropPoint.position = moveOutPoint.position;
         isMoving = false;
+
         GameManager.Instance.WaveCompleted();
 
         if (zombiesInScene == 0 && zombiePartsInScene == 0)
