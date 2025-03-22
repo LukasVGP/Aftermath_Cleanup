@@ -648,11 +648,12 @@ MonoBehaviour:
   finalScoreText: {fileID: 986011410}
   levelText: {fileID: 0}
   timerText: {fileID: 1662960906}
+  waveText: {fileID: 0}
   levelTimer: {fileID: 1015411599}
   currentLevel: 1
   maxLevels: 3
   baseZombiePoints: 100
-  requiredWaves: 3
+  maxWaves: 5
   mainMenuSceneName: MainMenu
   menuTransitionDelay: 3
   exitPoint: {fileID: 0}
@@ -3635,11 +3636,12 @@ MonoBehaviour:
   finalScoreText: {fileID: 986011410}
   levelText: {fileID: 0}
   timerText: {fileID: 0}
+  waveText: {fileID: 0}
   levelTimer: {fileID: 1015411599}
   currentLevel: 1
   maxLevels: 1
   baseZombiePoints: 100
-  requiredWaves: 1
+  maxWaves: 5
   mainMenuSceneName: MainMenu
   menuTransitionDelay: 3
   exitPoint: {fileID: 0}
@@ -10544,43 +10546,11 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
---- !u!1 &1255693925 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 8623877411078599908, guid: 17e7409a38ceabd40b1a67d6afd412ee, type: 3}
-  m_PrefabInstance: {fileID: 1356828008}
-  m_PrefabAsset: {fileID: 0}
 --- !u!61 &1255693926 stripped
 BoxCollider2D:
   m_CorrespondingSourceObject: {fileID: 8747046457572026765, guid: 17e7409a38ceabd40b1a67d6afd412ee, type: 3}
   m_PrefabInstance: {fileID: 1356828008}
   m_PrefabAsset: {fileID: 0}
---- !u!50 &1255693930
-Rigidbody2D:
-  serializedVersion: 5
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1255693925}
-  m_BodyType: 0
-  m_Simulated: 1
-  m_UseFullKinematicContacts: 0
-  m_UseAutoMass: 0
-  m_Mass: 1
-  m_LinearDamping: 0
-  m_AngularDamping: 0.05
-  m_GravityScale: 1
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_Interpolate: 0
-  m_SleepingMode: 1
-  m_CollisionDetection: 0
-  m_Constraints: 0
 --- !u!4 &1273329775 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 1164414647458854193, guid: 05f99be8449496d4aa1aef01f0847a94, type: 3}
@@ -11326,10 +11296,7 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 8623877411078599908, guid: 17e7409a38ceabd40b1a67d6afd412ee, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 1255693930}
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 17e7409a38ceabd40b1a67d6afd412ee, type: 3}
 --- !u!1 &1375839325
 GameObject:

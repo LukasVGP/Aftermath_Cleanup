@@ -35,13 +35,8 @@ public class ZombieSpawner : MonoBehaviour
         zombieDropPoint.position = moveOutPoint.position;
         nextSpawnTime = Time.time + spawnReturnInterval;
 
-        spawnPoints = new Transform[] {
-            moveInPoint,
-            spawnPoint2,
-            spawnPoint3,
-            spawnPoint4,
-            spawnPoint5
-        };
+        // Initialize spawn points array
+        spawnPoints = new Transform[] { moveInPoint, spawnPoint2, spawnPoint3, spawnPoint4, spawnPoint5 };
 
         if (zombiePrefab.GetComponent<Collider2D>() != null)
         {
@@ -72,6 +67,8 @@ public class ZombieSpawner : MonoBehaviour
         if (!isMoving && zombiesInScene == 0 && zombiePartsInScene == 0)
         {
             currentWave++;
+
+            // Check if we've reached the maximum number of waves set in GameManager
             if (currentWave <= GameManager.Instance.GetRequiredWaves())
             {
                 Debug.Log($"Starting Wave {currentWave}");
@@ -81,6 +78,7 @@ public class ZombieSpawner : MonoBehaviour
             {
                 isEnabled = false;
                 GameManager.Instance.WaveCompleted();
+                Debug.Log("All waves completed!");
             }
         }
     }
@@ -89,27 +87,27 @@ public class ZombieSpawner : MonoBehaviour
     {
         isMoving = true;
 
-        // Determine how many spawn points to use based on current wave
-        int spawnPointsToUse = Mathf.Min(currentWave, spawnPoints.Length);
+        // Determine how many zombies to spawn based on current wave
+        // Each wave adds one more zombie
+        int zombiesToSpawn = currentWave;
+        Debug.Log($"Wave {currentWave}: Spawning {zombiesToSpawn} zombies");
 
-        Debug.Log($"Wave {currentWave}: Using {spawnPointsToUse} spawn points");
-
-        // For each active spawn point in this wave
-        for (int spawnPointIndex = 0; spawnPointIndex < spawnPointsToUse; spawnPointIndex++)
+        // For each zombie in this wave
+        for (int zombieIndex = 0; zombieIndex < zombiesToSpawn; zombieIndex++)
         {
+            // Use a spawn point based on the zombie index (cycling through available points)
+            int spawnPointIndex = zombieIndex % spawnPoints.Length;
             Transform currentSpawnPoint = spawnPoints[spawnPointIndex];
             Vector3 targetPosition = currentSpawnPoint.position;
             zombieDropPoint.position = targetPosition;
 
-            Debug.Log($"Moving to spawn point {spawnPointIndex + 1}");
+            Debug.Log($"Moving to spawn point {spawnPointIndex + 1} for zombie {zombieIndex + 1}");
 
             // Move to the spawn point
             while ((targetPosition - transform.position).magnitude > stopDistance)
             {
                 transform.position = Vector3.MoveTowards(
-                    transform.position,
-                    targetPosition,
-                    moveSpeed * Time.deltaTime
+                    transform.position, targetPosition, moveSpeed * Time.deltaTime
                 );
                 yield return null;
             }
@@ -117,12 +115,12 @@ public class ZombieSpawner : MonoBehaviour
             transform.position = targetPosition;
             yield return new WaitForSeconds(pauseAtMoveInPoint);
 
-            // Spawn a single zombie at this spawn point
+            // Spawn a zombie at this spawn point
             GameObject zombie = Instantiate(zombiePrefab, zombieDropPoint.position, zombiePrefab.transform.rotation);
             zombiesInScene++;
             StartCoroutine(MonitorZombieDestruction(zombie));
 
-            Debug.Log($"Spawned zombie at point {spawnPointIndex + 1}, total zombies: {zombiesInScene}");
+            Debug.Log($"Spawned zombie {zombieIndex + 1} at point {spawnPointIndex + 1}, total zombies: {zombiesInScene}");
 
             yield return new WaitForSeconds(dropDelay);
         }
@@ -132,8 +130,9 @@ public class ZombieSpawner : MonoBehaviour
         // Move back to the exit point
         while ((moveOutPoint.position - transform.position).magnitude > stopDistance)
         {
-            transform.position = Vector3.MoveTowards(transform.position, moveOutPoint.position, moveSpeed * Time.deltaTime);
-            zombieDropPoint.position = transform.position;
+            transform.position = Vector3.MoveTowards(
+                transform.position, moveOutPoint.position, moveSpeed * Time.deltaTime
+            );
             yield return null;
         }
 
@@ -141,41 +140,85 @@ public class ZombieSpawner : MonoBehaviour
         zombieDropPoint.position = moveOutPoint.position;
         isMoving = false;
 
-        GameManager.Instance.WaveCompleted();
+        // Notify GameManager that a wave has started
+        GameManager.Instance.WaveStarted(currentWave);
 
-        if (zombiesInScene == 0 && zombiePartsInScene == 0)
-        {
-            yield return new WaitForSeconds(spawnReturnInterval);
-            StartNextWave();
-        }
+        Debug.Log($"Wave {currentWave} spawning complete, waiting for zombies to be destroyed");
     }
 
     private IEnumerator MonitorZombieDestruction(GameObject zombie)
     {
+        // Wait until the zombie is destroyed
         while (zombie != null)
         {
-            yield return null;
+            yield return new WaitForSeconds(0.5f);
         }
-        OnZombieDestroyed();
-    }
 
-    public void OnZombieDestroyed()
-    {
         zombiesInScene--;
-        GameManager.Instance.AddDisposedZombie();
-        Debug.Log($"Zombie destroyed. Remaining zombies: {zombiesInScene}");
+        Debug.Log($"Zombie destroyed, remaining zombies: {zombiesInScene}");
+
+        // Check if all zombies are gone
+        if (zombiesInScene == 0 && zombiePartsInScene == 0)
+        {
+            Debug.Log("All zombies destroyed, wave completed");
+            GameManager.Instance.WaveCompleted();
+
+            // If this was the last wave, don't start a new one
+            if (currentWave >= GameManager.Instance.GetRequiredWaves())
+            {
+                isEnabled = false;
+                Debug.Log("All waves completed!");
+            }
+            else
+            {
+                // Set the next spawn time
+                nextSpawnTime = Time.time + spawnReturnInterval;
+            }
+        }
     }
 
-    public void OnZombieTornApart()
+    // Called by ZombieController when a zombie part is created
+    public void ZombiePartCreated()
     {
-        zombiesInScene--;
-        zombiePartsInScene += 2;
-        Debug.Log($"Zombie torn apart. Parts in scene: {zombiePartsInScene}");
+        zombiePartsInScene++;
+        Debug.Log($"Zombie part created, total parts: {zombiePartsInScene}");
     }
 
-    public void OnZombiePartDestroyed()
+    // Called by ZombieController when a zombie part is destroyed
+    public void ZombiePartDestroyed()
     {
         zombiePartsInScene--;
-        Debug.Log($"Zombie part destroyed. Remaining parts: {zombiePartsInScene}");
+        Debug.Log($"Zombie part destroyed, remaining parts: {zombiePartsInScene}");
+
+        // Check if all zombies and parts are gone
+        if (zombiesInScene == 0 && zombiePartsInScene == 0)
+        {
+            Debug.Log("All zombies and parts destroyed, wave completed");
+            GameManager.Instance.WaveCompleted();
+
+            // If this was the last wave, don't start a new one
+            if (currentWave >= GameManager.Instance.GetRequiredWaves())
+            {
+                isEnabled = false;
+                Debug.Log("All waves completed!");
+            }
+            else
+            {
+                // Set the next spawn time
+                nextSpawnTime = Time.time + spawnReturnInterval;
+            }
+        }
+    }
+
+    // Public method to enable/disable the spawner
+    public void SetEnabled(bool enabled)
+    {
+        isEnabled = enabled;
+    }
+
+    // Public method to get the current wave
+    public int GetCurrentWave()
+    {
+        return currentWave;
     }
 }

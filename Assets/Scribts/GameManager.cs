@@ -17,13 +17,15 @@ public class GameManager : MonoBehaviour
     [SerializeField] private TextMeshProUGUI finalScoreText;
     [SerializeField] private TextMeshProUGUI levelText;
     [SerializeField] private TextMeshProUGUI timerText;
+    [SerializeField] private TextMeshProUGUI waveText; // Added for displaying current wave
 
     [Header("Game Settings")]
     [SerializeField] private LevelTimer levelTimer;
     [SerializeField] private int currentLevel = 1;
     [SerializeField] private int maxLevels = 3;
     [SerializeField] private float baseZombiePoints = 100f;
-    [SerializeField] private int requiredWaves = 5;
+    [Range(1, 10)] // Expanded range for more flexibility
+    [SerializeField] private int maxWaves = 5; // This now serves as both max and actual wave count
     [SerializeField] private string mainMenuSceneName = "MainMenu";
     [SerializeField] private float menuTransitionDelay = 3f;
     [SerializeField] private Transform exitPoint;
@@ -37,6 +39,7 @@ public class GameManager : MonoBehaviour
     private bool isGameActive = true;
     private int completedWaves = 0;
     private bool canExit = false;
+    private int currentWaveNumber = 0; // Added to track current wave
 
     private void Awake()
     {
@@ -59,7 +62,12 @@ public class GameManager : MonoBehaviour
         totalScore = 0;
         zombiesDisposed = 0;
         completedWaves = 0;
+        currentWaveNumber = 0;
         canExit = false;
+
+        // Ensure maxWaves is at least 1
+        maxWaves = Mathf.Max(1, maxWaves);
+
         currentTime = levelTimer != null ? levelTimer.levelTime : 300f;
         isGameActive = true;
         UpdateUI();
@@ -76,9 +84,8 @@ public class GameManager : MonoBehaviour
             {
                 TriggerGameOver();
             }
-
             // Check if all waves are completed and all zombies disposed
-            if (completedWaves >= requiredWaves && zombiesDisposed >= requiredZombies)
+            if (completedWaves >= maxWaves && zombiesDisposed >= requiredZombies)
             {
                 TriggerWin();
             }
@@ -104,7 +111,8 @@ public class GameManager : MonoBehaviour
     public void AddDisposedZombie(float pointMultiplier = 1.0f)
     {
         zombiesDisposed++;
-        AddScore(Mathf.RoundToInt(baseZombiePoints * pointMultiplier)); // Use the original method
+        AddScore(Mathf.RoundToInt(baseZombiePoints * pointMultiplier));
+        // Use the original method
         CheckLevelCompletion();
     }
 
@@ -131,7 +139,6 @@ public class GameManager : MonoBehaviour
                 // Add to total score only
                 break;
         }
-
         // Always update total score
         totalScore += points;
         UpdateUI();
@@ -159,35 +166,49 @@ public class GameManager : MonoBehaviour
         {
             player1ScoreText.text = $"P1 Score: {player1Score}";
         }
-
         if (player2ScoreText != null)
         {
             player2ScoreText.text = $"P2 Score: {player2Score}";
         }
-
         if (totalScoreText != null)
         {
             totalScoreText.text = $"Total Score: {totalScore}";
         }
-
         // For backward compatibility
         if (scoreText != null)
         {
             scoreText.text = $"Score: {totalScore}";
         }
-
         if (levelText != null)
         {
             levelText.text = $"Level {currentLevel}";
         }
+        if (waveText != null)
+        {
+            waveText.text = $"Wave {currentWaveNumber}/{maxWaves}";
+        }
+    }
+
+    // New method to handle wave start
+    public void WaveStarted(int waveNumber)
+    {
+        currentWaveNumber = waveNumber;
+        Debug.Log($"Wave {waveNumber} started");
+
+        // Update UI to show current wave
+        if (waveText != null)
+        {
+            waveText.text = $"Wave {currentWaveNumber}/{maxWaves}";
+        }
+
+        // You can add additional wave-specific logic here
     }
 
     public void WaveCompleted()
     {
         completedWaves++;
-        Debug.Log($"Wave completed: {completedWaves}/{requiredWaves}");
-
-        if (completedWaves >= requiredWaves)
+        Debug.Log($"Wave completed: {completedWaves}/{maxWaves}");
+        if (completedWaves >= maxWaves)
         {
             canExit = true;
             Debug.Log("All waves completed! Exit is now available.");
@@ -197,9 +218,8 @@ public class GameManager : MonoBehaviour
 
     private void CheckLevelCompletion()
     {
-        Debug.Log($"Checking level completion: Zombies disposed {zombiesDisposed}/{requiredZombies}, Waves completed {completedWaves}/{requiredWaves}");
-
-        if (zombiesDisposed >= requiredZombies && completedWaves >= requiredWaves)
+        Debug.Log($"Checking level completion: Zombies disposed {zombiesDisposed}/{requiredZombies}, Waves completed {completedWaves}/{maxWaves}");
+        if (zombiesDisposed >= requiredZombies && completedWaves >= maxWaves)
         {
             canExit = true;
             Debug.Log("Level completion conditions met!");
@@ -209,11 +229,9 @@ public class GameManager : MonoBehaviour
     public void TriggerGameOver()
     {
         if (!isGameActive) return; // Prevent multiple triggers
-
         isGameActive = false;
         Time.timeScale = 0f;
         Debug.Log("Game Over triggered!");
-
         if (gameOverScreen != null)
         {
             gameOverScreen.SetActive(true);
@@ -228,11 +246,9 @@ public class GameManager : MonoBehaviour
     public void TriggerWin()
     {
         if (!isGameActive) return; // Prevent multiple triggers
-
         isGameActive = false;
         Time.timeScale = 0f;
         Debug.Log("Win triggered!");
-
         if (winScreen != null)
         {
             winScreen.SetActive(true);
@@ -255,6 +271,7 @@ public class GameManager : MonoBehaviour
         currentLevel++;
         zombiesDisposed = 0;
         completedWaves = 0;
+        currentWaveNumber = 0;
         canExit = false;
         currentTime = levelTimer != null ? levelTimer.levelTime : 300f;
         SceneManager.LoadScene("Level_" + currentLevel);
@@ -282,11 +299,19 @@ public class GameManager : MonoBehaviour
     public int GetZombiesDisposed() => zombiesDisposed;
     public int GetRequiredZombies() => requiredZombies;
     public float GetCurrentTime() => currentTime;
-    public int GetRequiredWaves() => requiredWaves;
+    public int GetRequiredWaves() => maxWaves; // Now using maxWaves directly
     public int GetCompletedWaves() => completedWaves;
+    public int GetCurrentWave() => currentWaveNumber;
     public int GetMaxLevels() => maxLevels;
     public bool CanExitLevel() => canExit;
     public Transform GetExitPoint() => exitPoint;
+
+    // Set max waves (which now also sets the wave count)
+    public void SetMaxWaves(int count)
+    {
+        maxWaves = Mathf.Max(1, count);
+        Debug.Log($"Wave count set to: {maxWaves}");
+    }
 
     // Set exit point
     public void SetExitPoint(Transform exit)
