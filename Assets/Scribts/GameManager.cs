@@ -19,6 +19,9 @@ public class GameManager : MonoBehaviour
     [SerializeField] private TextMeshProUGUI timerText;
     [SerializeField] private TextMeshProUGUI waveText; // Added for displaying current wave
 
+    [Header("Intro Screen")]
+    [SerializeField] private GameIntroScreen introScreen;
+
     [Header("Game Settings")]
     [SerializeField] private LevelTimer levelTimer;
     [SerializeField] private int currentLevel = 1;
@@ -302,6 +305,22 @@ public class GameManager : MonoBehaviour
     public void ReturnToMainMenu()
     {
         SceneManager.LoadScene(mainMenuSceneName);
+    }
+
+    public void ShowIntroScreen()
+    {
+        if (introScreen != null)
+        {
+            introScreen.ShowIntroScreen();
+        }
+    }
+
+    public void HideIntroScreen()
+    {
+        if (introScreen != null)
+        {
+            introScreen.CloseIntroScreen();
+        }
     }
 
     // Getter methods
