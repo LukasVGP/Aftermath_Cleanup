@@ -2,72 +2,62 @@ using UnityEngine;
 
 public class Furnace : MonoBehaviour
 {
-    [Header("Spawn Settings")]
-    [SerializeField] private Transform coinSpawnPoint;
-    [SerializeField] private GameObject goldCoinPrefab;
-    [SerializeField] private GameObject silverCoinPrefab;
-    [SerializeField] private float coinSpawnOffset = 0.5f;
-    [SerializeField] private float spawnHeightVariation = 0.2f;
+    [Header("Point Settings")]
+    [SerializeField] private int goldCoinValue = 100;
+    [SerializeField] private int silverCoinValue = 50;
 
-    [Header("Force Settings")]
-    [SerializeField] private float baseEjectionForce = 5f;
-    [SerializeField] private float randomForceVariation = 2f;
-
-    private int silverCoinsToSpawn = 0;
+    private int zombieHalfCount = 0;
 
     private void OnTriggerEnter2D(Collider2D other)
     {
         if (other.TryGetComponent<ZombieBody>(out ZombieBody body))
         {
-            SpawnGoldCoins();
+            // Award points for a full zombie body (equivalent to 2 gold coins)
+            AwardPoints(goldCoinValue * 2);
             Destroy(body.gameObject);
         }
         else if (other.TryGetComponent<ZombieHalf>(out ZombieHalf half))
         {
-            silverCoinsToSpawn++;
-            if (silverCoinsToSpawn >= 2)
+            zombieHalfCount++;
+            if (zombieHalfCount >= 2)
             {
-                SpawnSilverCoins();
-                silverCoinsToSpawn = 0;
+                // Award points for 2 zombie halves (equivalent to 2 silver coins)
+                AwardPoints(silverCoinValue * 2);
+                zombieHalfCount = 0;
             }
             Destroy(half.gameObject);
         }
     }
 
-    private void SpawnGoldCoins()
+    private void AwardPoints(int points)
     {
-        // Spawn two gold coins with offset
-        Vector3 leftPosition = coinSpawnPoint.position + Vector3.left * coinSpawnOffset;
-        Vector3 rightPosition = coinSpawnPoint.position + Vector3.right * coinSpawnOffset;
+        // Determine which player is closer to the furnace to award them the points
+        GameObject redPlayer = GameObject.FindGameObjectWithTag("RedPlayer");
+        GameObject bluePlayer = GameObject.FindGameObjectWithTag("BluePlayer");
 
-        SpawnCoinWithForce(goldCoinPrefab, leftPosition);
-        SpawnCoinWithForce(goldCoinPrefab, rightPosition);
-    }
-
-    private void SpawnSilverCoins()
-    {
-        // Spawn two silver coins with offset
-        Vector3 leftPosition = coinSpawnPoint.position + Vector3.left * coinSpawnOffset;
-        Vector3 rightPosition = coinSpawnPoint.position + Vector3.right * coinSpawnOffset;
-
-        SpawnCoinWithForce(silverCoinPrefab, leftPosition);
-        SpawnCoinWithForce(silverCoinPrefab, rightPosition);
-    }
-
-    private void SpawnCoinWithForce(GameObject coinPrefab, Vector3 position)
-    {
-        // Add slight height variation
-        position.y += Random.Range(-spawnHeightVariation, spawnHeightVariation);
-
-        GameObject coin = Instantiate(coinPrefab, position, Quaternion.identity);
-        Rigidbody2D rb = coin.GetComponent<Rigidbody2D>();
-
-        if (rb != null)
+        if (redPlayer != null && bluePlayer != null)
         {
-            // Calculate random ejection force
-            float randomForce = baseEjectionForce + Random.Range(-randomForceVariation, randomForceVariation);
-            Vector2 ejectionDirection = new Vector2(Random.Range(-0.5f, 0.5f), 1f).normalized;
-            rb.AddForce(ejectionDirection * randomForce, ForceMode2D.Impulse);
+            float distanceToRed = Vector2.Distance(transform.position, redPlayer.transform.position);
+            float distanceToBlue = Vector2.Distance(transform.position, bluePlayer.transform.position);
+
+            if (distanceToRed <= distanceToBlue)
+            {
+                // Award points to player 1 (red)
+                GameManager.Instance?.AddPointsToPlayer1(points);
+                Debug.Log($"Awarded {points} points to Player 1");
+            }
+            else
+            {
+                // Award points to player 2 (blue)
+                GameManager.Instance?.AddPointsToPlayer2(points);
+                Debug.Log($"Awarded {points} points to Player 2");
+            }
+        }
+        else
+        {
+            // If we can't find both players, just add to total score
+            GameManager.Instance?.AddScore(points);
+            Debug.Log($"Awarded {points} points to total score");
         }
     }
 }

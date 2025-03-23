@@ -8,13 +8,11 @@ public class BluePlayerController : MonoBehaviour
     [SerializeField] private Transform groundCheck;
     [SerializeField] private float groundCheckRadius = 0.2f;
     [SerializeField] private LayerMask groundLayer;
-
     private Rigidbody2D rb;
     private bool isGrounded;
     private bool isCarryingZombieHalf = false;
     public bool WantsToGrab { get; private set; }
     private ZombieBody carriedBody;
-
     // Static input tracking for both players
     public static bool leftKeyPressed = false;
     public static bool rightKeyPressed = false;
@@ -37,7 +35,6 @@ public class BluePlayerController : MonoBehaviour
         CheckGrounded();
         HandleGrabbing();
         HandleJump();
-
         // Track keypad inputs for blue player
         if (Input.GetKeyDown(KeyCode.Keypad4)) leftKeyPressed = true;
         if (Input.GetKeyUp(KeyCode.Keypad4)) leftKeyPressed = false;
@@ -60,11 +57,9 @@ public class BluePlayerController : MonoBehaviour
         float horizontalMovement = 0f;
         if (leftKeyPressed) horizontalMovement -= 1f;
         if (rightKeyPressed) horizontalMovement += 1f;
-
         // Use MovePosition for more reliable movement
         Vector2 targetPosition = rb.position + new Vector2(horizontalMovement * moveSpeed * Time.fixedDeltaTime, 0);
         rb.MovePosition(targetPosition);
-
         // Keep vertical velocity for jumping
         rb.linearVelocity = new Vector2(0, rb.linearVelocity.y);
     }
@@ -94,28 +89,6 @@ public class BluePlayerController : MonoBehaviour
                 carriedBody = null;
             }
             Debug.Log("Blue Player released grab");
-        }
-    }
-
-    private void OnTriggerEnter2D(Collider2D other)
-    {
-        if (other.CompareTag("Coin"))
-        {
-            Debug.Log($"Blue Player collided with coin: {other.gameObject.name}");
-            int scoreValue = 0;
-            if (other.TryGetComponent<GoldCoin>(out GoldCoin goldCoin))
-            {
-                scoreValue = goldCoin.GetValue();
-            }
-            else if (other.TryGetComponent<SilverCoin>(out SilverCoin silverCoin))
-            {
-                scoreValue = silverCoin.GetValue();
-            }
-            if (scoreValue > 0)
-            {
-                GameManager.Instance?.AddScore(scoreValue);
-                Destroy(other.gameObject);
-            }
         }
     }
 

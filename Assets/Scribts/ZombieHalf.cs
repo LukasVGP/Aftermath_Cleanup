@@ -5,7 +5,7 @@ public class ZombieHalf : MonoBehaviour
     [Header("Half Settings")]
     [SerializeField] private bool isUpperHalf;
     [SerializeField] private bool isLowerHalf;
-    [SerializeField] private int silverCoinValue = 25;
+    [SerializeField] private int pointValue = 25;
     [SerializeField] private float carryHeight = 2f;
 
     private Rigidbody2D rb;
@@ -98,14 +98,14 @@ public class ZombieHalf : MonoBehaviour
             {
                 Debug.Log("Zombie half entered furnace");
 
-                // Award silver coins to the appropriate player
+                // Award points to the appropriate player
                 if (carrier is RedPlayerController)
                 {
-                    GameManager.Instance?.Player1CollectCoin(silverCoinValue);
+                    GameManager.Instance?.AddPointsToPlayer1(pointValue);
                 }
                 else if (carrier is BluePlayerController)
                 {
-                    GameManager.Instance?.Player2CollectCoin(silverCoinValue);
+                    GameManager.Instance?.AddPointsToPlayer2(pointValue);
                 }
 
                 GameManager.Instance?.AddDisposedZombie(0.5f); // Half a zombie counts as 0.5
@@ -240,7 +240,7 @@ public class ZombieHalf : MonoBehaviour
         return isBeingCarried;
     }
 
-    public int GetSilverCoinValue() => silverCoinValue;
+    public int GetPointValue() => pointValue;
     public bool IsUpperHalf() => isUpperHalf;
     public bool IsLowerHalf() => isLowerHalf;
 }

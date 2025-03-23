@@ -15,7 +15,6 @@ public class ZombieBody : MonoBehaviour
     [SerializeField] private GameObject lowerHalfPrefab;
     [SerializeField] private GameObject intestinesPrefab;
     [SerializeField] private Transform tearPoint;
-    [SerializeField] private StrainMeter strainMeter;
 
     private MonoBehaviour headCarrier;
     private MonoBehaviour feetCarrier;
@@ -132,20 +131,9 @@ public class ZombieBody : MonoBehaviour
             rb.linearVelocity = Vector2.zero;
             rb.angularVelocity = 0f;
             isOnFurnaceConveyor = false;
-
-            if (strainMeter != null)
-            {
-                strainMeter.gameObject.SetActive(true);
-                strainMeter.SetTarget(transform);
-            }
         }
         else if (wasCarried)
         {
-            if (strainMeter != null)
-            {
-                strainMeter.gameObject.SetActive(false);
-                strainMeter.SetTarget(null);
-            }
             DropBody();
         }
     }
@@ -155,10 +143,6 @@ public class ZombieBody : MonoBehaviour
         if (isBeingCarried && headCarrier != null && feetCarrier != null)
         {
             float currentDistance = Vector2.Distance(headCarrier.transform.position, feetCarrier.transform.position);
-            if (strainMeter != null)
-            {
-                strainMeter.UpdateStrain(currentDistance);
-            }
 
             if (currentDistance >= baseBodyLength * tearMultiplier)
             {

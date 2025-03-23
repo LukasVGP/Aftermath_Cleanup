@@ -160,6 +160,21 @@ public class GameManager : MonoBehaviour
         UpdateUI();
     }
 
+    // New direct point awarding methods
+    public void AddPointsToPlayer1(int points)
+    {
+        player1Score += points;
+        totalScore += points;
+        UpdateUI();
+    }
+
+    public void AddPointsToPlayer2(int points)
+    {
+        player2Score += points;
+        totalScore += points;
+        UpdateUI();
+    }
+
     private void UpdateUI()
     {
         if (player1ScoreText != null)
